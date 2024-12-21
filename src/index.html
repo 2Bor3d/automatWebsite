@@ -5,18 +5,21 @@
 		<title>B.A.M.B.I. v.0.1</title>
 		<meta name="viewport" contetn="width=device-width, initial-scale=1.0">
 		<script src="script.js"></script>
+		<link rel="stylesheet" href="styles.css">
     </head>
     <body>
 		<div id="titlebar">
 			<h1>MINT-Zentrum Seeheim
 		</div>
-		<div id="bar">
-			<p>liste</p>
-			<p>kurse</p>
-			<p>suche</p>
-		</div>
-		<div id="page">
-			<iframe src="page.html"></iframe>
+		<div id="main">
+			<div id="bar">
+				<p onclick="move('list')">liste</p>
+				<p onclick="move('courses')">kurse</p>
+				<p onclick="move(">suche</p>
+			</div>
+			<div id="page">
+				<iframe src="page.html"></iframe>
+			</div>
 		</div>
       </body>
 </html>
