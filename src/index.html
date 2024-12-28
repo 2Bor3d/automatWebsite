@@ -7,15 +7,20 @@
 		<script src="script.js"></script>
 		<link rel="stylesheet" href="styles.css">
     </head>
-    <body>
-		<div id="titlebar">
-			<h1>MINT-Zentrum Seeheim
+    <body onload="load()">
+		<div id="title">
+			<div id="header">
+				<h1>MINT-Zentrum Seeheim</h1>
+			</div>
+			<div id="user">
+				<p id="username" class="clickable">Unknown</p>
+			</div>
 		</div>
 		<div id="main">
 			<div id="bar">
-				<p onclick="move('list')">liste</p>
-				<p onclick="move('courses')">kurse</p>
-				<p onclick="move(">suche</p>
+				<p onclick="move('list')" class="clickable">liste</p>
+				<p onclick="move('courses')" class="clickable">kurse</p>
+				<p onclick="move('suche')" class="clickable">suche</p>
 			</div>
 			<div id="page">
 				<iframe src="page.html"></iframe>

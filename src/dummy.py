@@ -50,12 +50,26 @@ def pageJs():
         return flask.make_response("authorisation failed"), 403
 
 
+@app.route("/page/styles.css")
+def pageCss():
+    if flask.request.cookies.get("auth") == "true":
+        with open("list/styles.css", "r") as file:
+            return flask.Response(file.read(), mimetype="text/css");
+    else:
+        return flask.make_response("authorisation failed"), 403
+
+
 @app.route("/login", methods=["POST"])
 def login():
     print(flask.request.get_json())
     response = flask.make_response("success");
     response.set_cookie("auth", "true");
     return response;
+
+
+@app.route("/username", methods=["POST"])
+def username():
+    return {"username": "Reinhard"};
 
 
 @app.route("/entrys", methods=["POST"])
