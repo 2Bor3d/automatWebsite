@@ -29,7 +29,8 @@ def styles():
             return flask.Response(file.read(), mimetype="text/css");
     else:
         with open("login/styles.css", "r") as file:
-            return file.read();
+            return flask.Response(file.read(), mimetype="text/css");
+
 
 
 @app.route("/page.html")
@@ -76,6 +77,13 @@ def username():
 def entrys():
     return [{"first": "david", "last": "glaenzel", "attendence": ["21", "22"], "time": 5.3},
             {"first": "ben", "last": "schnorri", "attendence": ["32", "54"], "time": 1.2}]
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    response = flask.make_response("success");
+    response.set_cookie("auth", "", expires=0);
+    return response;
 
 
 if __name__ == "__main__":
