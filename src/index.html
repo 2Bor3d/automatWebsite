@@ -13,17 +13,30 @@
 				<h1>MINT-Zentrum Seeheim</h1>
 			</div>
 			<div id="user">
-				<p onclick="logout()" id="username" class="clickable">Unknown</p>
+				<p onclick="logout()" id="username" 
+				class="clickable">Unknown</p>
 			</div>
 		</div>
 		<div id="main">
-			<div id="bar">
-				<p onclick="move('list')" class="clickable">liste</p>
-				<p onclick="move('courses')" class="clickable">kurse</p>
-				<p onclick="move('suche')" class="clickable">suche</p>
-			</div>
+			<nav id="bar">
+				<ul>
+					<li><p onclick="move('list')" 
+						class="clickable">liste</p></li>
+					<li><p onclick="expand()" class="clickable">kurse</p>
+						<ul class="sub hidden" id="sub"></ul>
+					</li>
+					<li><p onclick="move('suche')" 
+						class="clickable">suche</p></li>
+					<li><p onclick="move('add')" 
+						class="clickable admin hidden">add</p></li>
+					<li><p onclick="move('remove')" 
+						class="clickable admin hidden">remove</p></li>
+					<li><p onclick="move('mixed')" 
+						class="clickable admin hidden">miscellaneous</p></li>
+				</ul>
+			</nav>
 			<div id="page">
-				<iframe src="page.html"></iframe>
+				<iframe id="iframe" src="page.html"></iframe>
 			</div>
 		</div>
       </body>

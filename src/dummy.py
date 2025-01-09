@@ -2,6 +2,8 @@ import flask
 
 app = flask.Flask(__name__);
 
+position = "list";
+
 @app.route("/")
 def index():
     if flask.request.cookies.get("auth") == "true":
@@ -36,7 +38,8 @@ def styles():
 @app.route("/page.html")
 def page():
     if flask.request.cookies.get("auth") == "true":
-        with open("list/index.html", "r") as file:
+        print(position)
+        with open(f"{position}/index.html", "r") as file:
             return file.read();
     else:
         return flask.make_response("authorisation failed"), 403
@@ -45,7 +48,7 @@ def page():
 @app.route("/page/script.js")
 def pageJs():
     if flask.request.cookies.get("auth") == "true":
-        with open("list/script.js", "r") as file:
+        with open(f"{position}/script.js", "r") as file:
             return file.read();
     else:
         return flask.make_response("authorisation failed"), 403
@@ -54,7 +57,7 @@ def pageJs():
 @app.route("/page/styles.css")
 def pageCss():
     if flask.request.cookies.get("auth") == "true":
-        with open("list/styles.css", "r") as file:
+        with open(f"{position}/styles.css", "r") as file:
             return flask.Response(file.read(), mimetype="text/css");
     else:
         return flask.make_response("authorisation failed"), 403
@@ -70,13 +73,27 @@ def login():
 
 @app.route("/username", methods=["POST"])
 def username():
-    return {"username": "Reinhard"};
+    return {"username": "Reinhard", "admin": True, 
+            "courses": ["Technik", "informatik"]};
+
+
+@app.route("/move", methods=["POST"])
+def move():
+    global position;
+    print(flask.request.get_json())
+    position = flask.request.get_json()["position"];
+    return flask.make_response("success");
 
 
 @app.route("/entrys", methods=["POST"])
 def entrys():
     return [{"first": "david", "last": "glaenzel", "attendence": ["21", "22"], "time": 5.3},
             {"first": "ben", "last": "schnorri", "attendence": ["32", "54"], "time": 1.2}]
+
+
+@app.route("/courses", methods=["POST"])
+def courses():
+    return ["Technik", "Informatik", "Physik"];
 
 
 @app.route("/logout", methods=["POST"])
@@ -88,4 +105,4 @@ def logout():
 
 if __name__ == "__main__":
     app.run()
-    
+

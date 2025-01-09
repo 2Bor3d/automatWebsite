@@ -18,6 +18,12 @@ h1 {
 	width: max-content;
 }
 
+ul {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
 p {
 	margin: 0;
 	padding: 0;
@@ -41,6 +47,14 @@ iframe {
 
 .clickable:hover {
 	text-decoration: underline;
+}
+
+.sub {
+	padding-left: 10px;
+}
+
+.hidden {
+	display: none;
 }
 
 #title {
