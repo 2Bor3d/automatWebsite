@@ -73,8 +73,8 @@ def login():
 
 @app.route("/username", methods=["POST"])
 def username():
-    return {"username": "Reinhard", "admin": True, 
-            "courses": ["Technik", "informatik"]};
+    return {"username": "Reinhardt", "admin": True, 
+            "courses": ["Technik", "Informatik"]};
 
 
 @app.route("/move", methods=["POST"])

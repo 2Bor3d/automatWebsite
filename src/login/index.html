@@ -8,19 +8,25 @@
 		 <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-		<div id="title">
+		<!--div id="title"-->
 			<div id="header">
-				<h1>MINT-Zentrum Seeheim</h1>
+				<!-- <h1> -->
+					<div class="header-logo"><img src="static/LogoBambiWebsite.png" alt="logo"/></div>
+					<div class="header-text">MINT-Zentrum Seeheim</div>
+				<!-- </h1> -->
 			</div>
-		</div>
+		<!-- </div> -->
 		<div id="login">
-			<label for="user">username</label>
+			<!-- <label for="user">username</label> -->
 			<input type="text" placeholder="username..." name="user" 
 				onkeyup="pressed(event, 'user')" id="user"></input>
-			<label for="pwd">password</label>
+			<!-- <label for="pwd">password</label> -->
 			<input type="password" placeholder="password..." name="pwd" 
 				onkeyup="pressed(event, 'pwd')" id="pwd"></input>
 			<button onclick="login()">login</button>
 		</div>
+		<footer>
+			<p>&copy; 2025 böser Wauwau 5000 - all rights reserved</p>
+		</footer>
     </body>
 </html>
