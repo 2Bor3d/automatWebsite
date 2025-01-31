@@ -8,16 +8,21 @@
 		<link rel="stylesheet" href="styles.css">
     </head>
     <body onload="load()">
-		<div id="title">
-			<div id="header">
-				<h1>MINT-Zentrum Seeheim</h1>
-			</div>
-			<div id="user">
+		<!-- <div id="title"> -->
+			<header id="header">
+				<div class="header-logo"><img src="static/LogoBambiWebsite.png" alt="logo"/></div>
+				<div class="header-text">MINT-Zentrum Seeheim</div>
+				<div id="user">
+					<p onclick="logout()" id="username" 
+					class="clickable">Unknown</p>
+				</div>
+			<!-- </div> -->
+			<!-- <div id="user">
 				<p onclick="logout()" id="username" 
 				class="clickable">Unknown</p>
-			</div>
-		</div>
-		<div id="main">
+			</div> -->
+		</header>
+		<main id="main">
 			<nav id="bar">
 				<ul>
 					<li><p onclick="move('list')" 
@@ -38,6 +43,9 @@
 			<div id="page">
 				<iframe id="iframe" src="page.html"></iframe>
 			</div>
-		</div>
+		</main>
+		<footer>
+			<p>&copy; 2025 böser Wauwau 5000 - all rights reserved</p>
+		</footer>
       </body>
 </html>

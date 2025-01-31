@@ -1,11 +1,15 @@
-body, html {
+body,
+html {
 	margin: 0;
 	padding: 0;
 	width: 100%;
 	height: 100%;
 	display: flex;
-	justify-content: space-around;
-	align-items: vertical-center; 
+}
+
+body {
+	display: flex;
+	flex-flow: column;
 }
 
 h1 {
@@ -50,32 +54,45 @@ h1 {
 	align-content: center;
 }
 
-img, header{
+img {
 	max-height: 30px;
 	margin-right: 10px;
 }
 
-footer{
+main {
+	width: 100%;
+	/* flex-grow: 1; */
+	display:flex;
+	flex:auto;
+	justify-content: center;
+}
+
+/* ------------------------------ */
+/* - footer						- */
+/* ------------------------------ */
+
+footer {
 	display: flex;
-	position:fixed;
+	position: fixed;
 	align-items: center;
 	padding: 2px;
-	bottom:0;
+	bottom: 0;
 	left: 0;
 	margin-top: auto;
 	background-color: #7b7a7a;
-	justify-content:flex-end;
+	justify-content: flex-end;
 	width: 100%;
 }
 
-p, footer {
+p,
+footer {
 	margin: 0;
 	margin-right: 10px;
 	font-size: small;
 	color: #ffffff;
 	align-items: center;
-
 }
+
 /*
 #login {
 	margin: auto;

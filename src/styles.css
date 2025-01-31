@@ -1,8 +1,12 @@
-body, html {
+/* 8X ----- schnipp ----------X8 */
+
+body,
+html {
 	margin: 0;
 	padding: 0;
 	width: 100%;
 	height: 100%;
+	display: flex;
 }
 
 body {
@@ -18,18 +22,28 @@ h1 {
 	width: max-content;
 }
 
+/* 8X ----- schnapp ----------X8 */
+
+
+/* ------------------------------ */
+/* - menu bar 					- */
+/* ------------------------------ */
+
 ul {
 	margin: 0;
 	padding: 0;
 	list-style-type: none;
 }
 
-p {
+p.clickable {
 	margin: 0;
 	padding: 0;
 	width: min-content;
 }
 
+/* ------------------------------ */
+/* - page 						- */
+/* ------------------------------ */
 iframe {
 	margin: 0;
 	padding: 0;
@@ -57,43 +71,119 @@ iframe {
 	display: none;
 }
 
-#title {
-	color: #ffffff;
-	background-color: #3030c0;
-}
+/* #title { */
+/* color: #ffffff; */
+/* background-color: #3030c0; */
+/* } */
 
-#header {
-	width: min-content;
-	float: left;
-}
 
 #user {
-	position: relative;
+	/* position: relative;
 	top: 50%;
-	-ms-transform: translateY(-50%);
-	transform: translateY(-50%);
-	float: right;
+	-ms-transform: translateY(-50%) translateX(-50%);
+	transform: translateY(-50%); */
+	justify-content: right;
+	margin-left: auto;
 }
 
-#main {
+main {
 	width: 100%;
-	flex-grow: 1;
+	/* flex-grow: 1; */
+	display:flex;
+	flex:auto;
+	/* background: url('/static/LogoBambiWebsiteGray.png') no-repeat center; */
 }
 
 #bar {
 	padding: 5px;
 	border-radius: 0 0 5px 0;
 	color: #ffffff;
-	background-color: #3030c0;
+	background-color: #7aae3e;
 	width: min-content;
+	height: min-content;
 	float: left;
 }
 
 #page {
-	overflow: hidden; 
-	height: 100%; 
+	overflow: hidden;
+	height: 100%;
+	width:100%;
 	margin: 0;
 	padding: 0;
-	background-color: #3030d0;
+	background-color: #7aae3e;
 }
 
+/* 8X ----- schnipp ----------X8 */
+
+/* ------------------------------ */
+/* - header 					- */
+/* ------------------------------ */
+
+/* #header {
+	width: min-content;
+	float: left;
+} */
+
+header {
+	/* width: min-content; */
+	/* float: left;
+	position: fixed; */
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 50px;
+	background-color: #7aae3e;
+	color: white;
+	display: flex;
+	justify-content: flex-start;
+	padding: 0 20px;
+	box-sizing: border-box;
+	z-index: 1000;
+	align-items: center;
+}
+
+.header-text {
+
+	font-size: 30px;
+	line-height: 30px;
+	/* align-content: center; */
+}
+
+.header-logo {
+	height: 30px;
+	align-content: center;
+}
+
+img {
+	height: 30px;
+	margin-right: 10px;
+}
+
+
+/* ------------------------------ */
+/* - footer						- */
+/* ------------------------------ */
+
+footer {
+	display: flex;
+	position: fixed;
+	align-items: center;
+	padding: 2px;
+	bottom: 0;
+	left: 0;
+	margin-top: auto;
+	background-color: #7b7a7a;
+	justify-content: flex-end;
+	width: 100%;
+}
+
+p,
+footer {
+	margin: 0;
+	margin-right: 10px;
+	font-size: small;
+	color: #ffffff;
+	align-items: center;
+}
+
+/* 8X ----- schnapp ----------X8 */
