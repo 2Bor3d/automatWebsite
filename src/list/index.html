@@ -8,7 +8,7 @@
 		<link rel="stylesheet" href="page/styles.css">
     </head>
     <body onload="load()">
-		<div id="list">
+		<main id="list">
 			<table id="table">
 				<tr>
 					<th>Vorname</th>
@@ -16,7 +16,34 @@
 					<th>Anwesenheit</th>
 					<th>Zeitkonto</th>
 				</tr>
+			</table>
+		</main>
+		<div id="popup" class="hidden">
+			<div class="row">
+				<p class="lable">Name: </p>
+				<input id="firstname" disabled>
+				<input id="lastname" disabled>
+			</div>
+			<div class="row">
+				<p class="lable">Anwesenheit: </p>
+				<input id="attendanceDate" type="date">
+				<select id="attendance">
+					<option value="present">Anwesend</option>
+					<option value="excused">Entschuldigt</option>
+					<option value="absent">Abwesend</option>
+				</select>
+			</div>
+			<div class="row">
+				<p class="lable">Zeitkonto: </p>
+				<input id="balance" type="number">
+			</div>
+			<div class="row">
+				<p class="lable">Kurse: </p>
+				<input id="courses" disabled>
+			</div>
+			<div class="row">
+				<button id="save">Speichern</button>
 		</div>
-      </body>
+	</body>
 </html>
-		
+

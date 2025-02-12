@@ -87,8 +87,8 @@ def move():
 
 @app.route("/entrys", methods=["POST"])
 def entrys():
-    return [{"first": "david", "last": "glaenzel", "attendence": ["21", "22"], "time": 5.3},
-            {"first": "ben", "last": "schnorri", "attendence": ["32", "54"], "time": 1.2}]
+    return [{"id": 123, "first": "david", "last": "glaenzel", "attendence": ["21", "22"], "time": 5.3},
+            {"id": 124, "first": "ben", "last": "schnorri", "attendence": ["32", "54"], "time": 1.2}]
 
 
 @app.route("/courses", methods=["POST"])

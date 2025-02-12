@@ -1,3 +1,11 @@
+.hidden {
+	display: none;
+}
+
+.popup {
+	position: absolute;
+}
+
 #table {
 	border: 0;
 	border-collapse: collapse;
@@ -29,3 +37,9 @@
 	border-right: none;
 }
 
+/* david beispiel code: */
+
+.dropdown {
+	position: absolute;
+	float: left;
+}
