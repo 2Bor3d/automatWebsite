@@ -7,7 +7,7 @@ app = flask.Flask(__name__);
 def sweets():
     return {"5": {"name": "Gummi", "hours": 2}, 
             "4": {"name": "Smarties", "hours": 2,}, 
-            "7": {"name": "Stats", "hours": ""}, 
+            "7": {"name": "Stats", "hours": -1}, 
             "6": {"name": "Pickup", "hours": 2}, 
             "1": {"name": "Dublo", "hours": 2}, 
             "0": {"name": "Mentos", "hours": 2}, 
