@@ -87,8 +87,9 @@ def move():
 
 @app.route("/entrys", methods=["POST"])
 def entrys():
-    return [{"id": 123, "first": "david", "last": "glaenzel", "attendence": ["21", "22"], "time": 5.3},
-            {"id": 124, "first": "ben", "last": "schnorri", "attendence": ["32", "54"], "time": 1.2}]
+    return [{"id": 123, "first": "david", "last": "glaenzel", "attendence": ["21.11.2024", "05.01.2025"], "balance": "5,3", "courses": "freies forschen"},
+            {"id": 124, "first": "ben", "last": "schnorri", "attendence": ["21.11.2024", "12.01.2025"], "balance": "1,2", "courses": "freies forschen"},
+            {"id": 125, "first": "annika", "last": "reinhardt", "attendence": ["05.01.2025", "12.01.2025"], "balance": "7,25", "courses": "freies forschen"}]
 
 
 @app.route("/courses", methods=["POST"])
@@ -104,5 +105,5 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port=80)
 

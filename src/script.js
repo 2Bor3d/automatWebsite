@@ -8,6 +8,8 @@ function load() {
 			console.log(json)
 			for (i=0; i<json["courses"].length; i++) {
 				p = document.createElement("p");
+				p.setAttribute("onclick", 
+						`move('list', '${json["courses"][i]}')`);
 				p.classList.add("clickable");
 				p.innerText = json["courses"][i]
 				list.appendChild(p);
@@ -39,11 +41,13 @@ function expand() {
 	}
 }
 
-function move(pos) {
+function move(pos, sub) {
 	fetch("move", {
 		method: "POST",
 		body: JSON.stringify({
 			position: pos,
+			sub: {
+				course: sub,
 		}),
 		headers: {"content-type": "application/json; charset=UTF-8",}}).then(
 			()=>{

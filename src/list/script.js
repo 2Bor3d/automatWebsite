@@ -27,7 +27,9 @@ function popup(id) {
 
 				document.getElementById("firstname").value = student.first;
 				document.getElementById("lastname").value = student.last;
-				document.getElementById("balance").value = student.balance;
+				document.getElementById("balance").value = parseFloat(student.balance);
+				document.getElementById("courses").value = student.courses;
+
 				document.getElementById("save")
 						.setAtribute("onclick", `save(${id})`);
 				}
