@@ -9,5 +9,5 @@ def scanned(id: list[int]):
     r = requests.post("http://127.0.0.1:5000", json=id)
     print(r.text)
 
-scanned([99, 179, 107, 0, 187]);
+scanned({"name": "Ben Schnorri", "rfid": [99, 179, 107, 0, 187]);
 
