@@ -3,7 +3,11 @@ import requests
 import json
 import base64
 import os
+import csv as csvBib
+import collections
 from datetime import datetime;
+
+from flask import send_file
 
 app = flask.Flask(__name__);
 
@@ -34,6 +38,7 @@ def index():
 @app.route("/script.js")
 def script():
     if checkAuth(flask.request.cookies.get("auth")):
+
         with open("script.js", "r") as file:
             return file.read();
     else:
@@ -163,7 +168,33 @@ def student():
     else:
         return flask.make_response("authorisation failed"), 401
 
+def getKey(e):
+    return e["key"];
+@app.route("/csv")#, methods=["POST"])
+def csv():
+    with open('exampledata.json', 'r') as file:
+        data = file.read()
+        entrys = json.loads(data)["people"]
+    days = set()
+    users = []
+    for entry in entrys:
+        users.append({"key": int(entry["number"]),"value": entry})
+        for day in entry["attended"]:
+            days.add(datetime.utcfromtimestamp(day[0]+946684800).strftime('%Y-%m-%d'))
+    print(users)
+    users.sort(key=getKey)
+    print(users)
+    with open('./students.csv', 'a', newline='') as csvfile:
+        writer = csvBib.writer(csvfile, delimiter=' ',quotechar='|', quoting=csvBib.QUOTE_MINIMAL)
+        header = ["Index", "Name"]
+        header.append(days)
+        writer.writerow(header)
+        for user in users:
+            print("x:" + str(user))
+            line = (str(id), user["value"]['name'])
+            writer.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+    return send_file("stundents.csv", as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(port=80)
+    app.run(port=8000)
 
