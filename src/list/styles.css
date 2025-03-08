@@ -43,3 +43,18 @@
 	position: absolute;
 	float: left;
 }
+
+/* mehr beispiel code: */
+
+#popup {
+	background-color: #f0f0f0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 10; 
+}
+
+#delete {
+	background-color: #ff0000;
+}

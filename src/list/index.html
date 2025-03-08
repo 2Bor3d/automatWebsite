@@ -14,7 +14,6 @@
 		<main id="list">
 			<table id="table">
 				<tr>
-					<th>Vorname</th>
 					<th>Name</th>
 					<th>Anwesenheit</th>
 					<th>Zeitkonto</th>
@@ -22,10 +21,10 @@
 			</table>
 		</main>
 		<div id="popup" class="hidden">
+			<button id="close" onclick="close()">Schließen</button>
 			<div class="row">
 				<p class="lable">Name: </p>
-				<input id="firstname" disabled>
-				<input id="lastname" disabled>
+				<input id="name" disabled>
 			</div>
 			<div class="row">
 				<p class="lable">Anwesenheit: </p>
@@ -46,6 +45,7 @@
 			</div>
 			<div class="row">
 				<button id="save">Speichern</button>
+				<button id="delete" disabled>Löschen</button>
 		</div>
 	</body>
 </html>
