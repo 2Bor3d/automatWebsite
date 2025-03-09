@@ -1,0 +1,108 @@
+{
+  "people": [
+    {
+      "time": 0,
+      "name": "Ben Schnorrenberger",
+      "attended": [],
+      "rfid": [
+        99,
+        179,
+        107,
+        0,
+        187
+      ],
+      "type": 0,
+      "number": 1,
+      "since": null
+    },
+    {
+      "time": 0,
+      "name": "David Glanzel",
+      "attended": [],
+      "rfid": [
+        99,
+        253,
+        101,
+        0,
+        251
+      ],
+      "type": 1,
+      "number": 2,
+      "since": 773265321
+    },
+    {
+      "time": 0,
+      "name": "Jan Schnorrenberger",
+      "attended": [],
+      "rfid": [
+        243,
+        74,
+        95,
+        0,
+        230
+      ],
+      "type": 0,
+      "number": 2,
+      "since": 774114655
+    },
+    {
+      "time": 133,
+      "name": "Christof Jost",
+      "attended": [
+        [
+          781379580,
+          781379713
+        ]
+      ],
+      "rfid": [
+        22,
+        165,
+        196,
+        59,
+        76
+      ],
+      "type": 0,
+      "number": 3,
+      "since": 782757338
+    },
+    {
+      "time": 326,
+      "name": "Sabine Reinhart",
+      "attended": [
+        [
+          781379572,
+          781379718
+        ],
+        [
+          782757424,
+          782757604
+        ]
+      ],
+      "rfid": [
+        101,
+        218,
+        228,
+        82,
+        9
+      ],
+      "type": 0,
+      "number": 4,
+      "since": null
+    },
+    {
+      "time": 0,
+      "name": "Leonas Thomas",
+      "attended": [],
+      "rfid": [
+        115,
+        203,
+        95,
+        0,
+        231
+      ],
+      "type": 0,
+      "number": 5,
+      "since": null
+    }
+  ]
+}
