@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import flask
 import requests
 import json
@@ -168,32 +170,48 @@ def student():
     else:
         return flask.make_response("authorisation failed"), 401
 
-def getKey(e):
-    return e["key"];
+#TODO: add ability to change file used for sending data
 @app.route("/csv")#, methods=["POST"])
 def csv():
-    with open('exampledata.json', 'r') as file:
-        data = file.read()
-        entrys = json.loads(data)["people"]
+    file_path = "students.csv"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
     days = set()
     users = []
-    for entry in entrys:
-        users.append({"key": int(entry["number"]),"value": entry})
-        for day in entry["attended"]:
-            days.add(datetime.utcfromtimestamp(day[0]+946684800).strftime('%Y-%m-%d'))
-    print(users)
-    users.sort(key=getKey)
-    print(users)
+
+    with open('exampledata.json', 'r') as json_file:
+        data = json_file.read()
+        for entry in json.loads(data)["people"]:
+            users.append({"key": int(entry["number"]),"value": entry})
+            for day in entry["attended"]:
+                for x in day:
+                    days.add(datetime.utcfromtimestamp(int(x)+946684800).strftime('%Y-%m-%d'))
+
+    users.sort(key=lambda x: x["key"])
+
     with open('./students.csv', 'a', newline='') as csvfile:
-        writer = csvBib.writer(csvfile, delimiter=' ',quotechar='|', quoting=csvBib.QUOTE_MINIMAL)
-        header = ["Index", "Name"]
-        header.append(days)
+        writer = csvBib.writer(csvfile, delimiter=';')
+        header = ['Index', 'Name']
+        for day in days:
+            header.append(day)
         writer.writerow(header)
+        print(days)
+
         for user in users:
-            print("x:" + str(user))
-            line = (str(id), user["value"]['name'])
-            writer.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
-    return send_file("stundents.csv", as_attachment=True)
+            data = set()
+            for day in user["value"]['attended']:
+                for x in day:
+                    data.add(datetime.utcfromtimestamp(x+946684800).strftime('%Y-%m-%d'))
+            line = (str(user["key"]), user["value"]['name'])
+            for day in days:
+                if day in data:
+                    line += ("Ja",)
+                else:
+                    line += ("Nein",)
+            writer.writerow(line)
+
+    return send_file("students.csv", as_attachment=True)
 
 if __name__ == "__main__":
     app.run(port=8000)
