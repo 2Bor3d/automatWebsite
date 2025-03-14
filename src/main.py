@@ -7,8 +7,6 @@ from datetime import datetime;
 
 app = flask.Flask(__name__);
 
-position = "list";
-
 logedin = {};
 
 
@@ -51,11 +49,10 @@ def styles():
             return flask.Response(file.read(), mimetype="text/css");
 
 
-
 @app.route("/page.html")
 def page():
     if checkAuth(flask.request.cookies.get("auth")):
-        print(position)
+        position = logedin[flask.request.cookies.get("auth")]["position"];
         with open(f"{position}/index.html", "r") as file:
             return file.read();
     else:
@@ -65,6 +62,7 @@ def page():
 @app.route("/page/script.js")
 def pageJs():
     if checkAuth(flask.request.cookies.get("auth")):
+        position = logedin[flask.request.cookies.get("auth")]["position"];
         with open(f"{position}/script.js", "r") as file:
             return file.read();
     else:
@@ -74,6 +72,7 @@ def pageJs():
 @app.route("/page/styles.css")
 def pageCss():
     if checkAuth(flask.request.cookies.get("auth")):
+        position = logedin[flask.request.cookies.get("auth")]["position"];
         with open(f"{position}/styles.css", "r") as file:
             return flask.Response(file.read(), mimetype="text/css");
     else:
@@ -83,6 +82,7 @@ def pageCss():
 @app.route("/login", methods=["POST"])
 def login():
     attempt = flask.request.get_json();
+    print("---")
     r = requests.get("http://192.168.4.1/users");
     print(r.content)
 
@@ -94,7 +94,7 @@ def login():
         if user["username"] == attempt["username"] and user["password"] == attempt["password"]:
             random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
             ############################################# fails 1/1431655765 times
-            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": user["groups"]};
+            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": user["groups"], "position": "list", "sub": ""};
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -133,9 +133,26 @@ def move():
 @app.route("/entrys", methods=["POST"])
 def entrys():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get("http://192.168.4.1/data")
+        r = requests.get("http://192.168.4.1/data");
         entrys = json.loads(r.text)["people"];
-        print(entrys[0])
+        
+        user = logedin[flask.request.cookies.get("auth")];
+        if not user["admin"] or user["sub"] != "":
+            r = requests.get("http://192.168.4.1/courses");
+            courses = json.load(r.text);
+            students = {};
+            if user["sub"] == "":
+                for cours in user["courses"]:
+                    students = students + set(courses[cours]["students"]);
+            else:
+                students = set(courses[user["sub"]]["students"]);
+
+            cleaned = [];
+            for entry in entrys:
+                if entry["number"] in students:
+                    cleaned.append(entry);
+            entrys = cleaned;
+
         new = [];
         for entry in entrys:
             new.append({
@@ -159,11 +176,13 @@ def courses():
 @app.route("/student", methods=["POST"])
 def student():
     if checkAuth(flask.request.cookies.get("auth")):
-        pass
+        r = requests.get("http://192.168.4.1/students?course=forschen");
+        print(r)
+        print(r.text)
+        print(json.loads(r.text))
     else:
         return flask.make_response("authorisation failed"), 401
 
 
 if __name__ == "__main__":
-    app.run(port=80)
-
+    app.run(port=8080)
