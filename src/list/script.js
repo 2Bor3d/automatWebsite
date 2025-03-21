@@ -11,12 +11,11 @@ function closePopup() {
 }
 
 function save(id) {
-	first = document.getElementById("firstname").value;
-	last = document.getElementById("lastname").value;
+	name = document.getElementById("name").value;
 	balance = document.getElementById("balance").value;
 
-	send("/change",
-		{ "id": id, "first": fist, "last": last, "balance": balance });
+	send("/change_user",
+		{ "id": id, "name": name, "balance": balance });
 }
 
 function deleteUser(id) {
@@ -42,9 +41,9 @@ function popup(id) {
 					document.getElementById("close")
 						.setAttribute("onclick", `closePopup()`);
 					document.getElementById("save")
-						.setAttribute("onclick", `save(${id})`);
+						.setAttribute("onclick", `save('${id}')`);
 					document.getElementById("delete")
-						.setAttribute("onclick", `deleteUser(${id})`);
+						.setAttribute("onclick", `deleteUser('${id}')`);
 				}
 			});
 		});

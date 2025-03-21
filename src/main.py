@@ -1,13 +1,22 @@
+from pathlib import Path
+
 import flask
 import requests
 import json
 import base64
 import os
+import csv as csvBib
+import collections
 from datetime import datetime;
+
+from flask import send_file
 
 app = flask.Flask(__name__);
 
 logedin = {};
+
+IP = "http://192.168.4.1";
+#IP = "http://127.0.0.1:5000";
 
 
 def checkAuth(auth: str) -> bool:
@@ -83,7 +92,7 @@ def pageCss():
 def login():
     attempt = flask.request.get_json();
     print("---")
-    r = requests.get("http://192.168.4.1/users");
+    r = requests.get(IP + "/users");
     print(r.content)
 
     users = json.loads(r.text);
@@ -121,10 +130,10 @@ def username():
 
 @app.route("/move", methods=["POST"])
 def move():
-    global position;
     if checkAuth(flask.request.cookies.get("auth")):
         print(flask.request.get_json())
-        position = flask.request.get_json()["position"];
+        logedin[flask.request.cookies.get("auth")]["position"] = \
+            flask.request.get_json()["position"];
         return flask.make_response("success");
     else:
         return flask.make_response("authorisation failed"), 401
@@ -133,12 +142,12 @@ def move():
 @app.route("/entrys", methods=["POST"])
 def entrys():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get("http://192.168.4.1/data");
+        r = requests.get(IP + "/data");
         entrys = json.loads(r.text)["people"];
-        
+
         user = logedin[flask.request.cookies.get("auth")];
         if not user["admin"] or user["sub"] != "":
-            r = requests.get("http://192.168.4.1/courses");
+            r = requests.get(IP + "/courses");
             courses = json.load(r.text);
             students = {};
             if user["sub"] == "":
@@ -168,20 +177,84 @@ def entrys():
 @app.route("/courses", methods=["POST"])
 def courses():
     if checkAuth(flask.request.cookies.get("auth")):
-        return ["Technik", "Informatik", "Physik"];
-    else:
-        return flask.make_response("authorisation failed"), 401
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            r = requests.get(IP + "/courses");
+            return r.text;
+    return flask.make_response("authorisation failed"), 401
 
 
 @app.route("/student", methods=["POST"])
 def student():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get("http://192.168.4.1/students?course=forschen");
+        r = requests.get(IP + "/students?course=forschen");
         print(r)
         print(r.text)
         print(json.loads(r.text))
     else:
         return flask.make_response("authorisation failed"), 401
+
+
+@app.route("/change_user", methods=["POST"])
+def change_user():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            print(flask.request.get_json())
+
+
+@app.route("/change_course", methods=["POST"])
+def change_course():
+    print(flask.request.data)
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            r = requests.get(IP + "/courses");
+            print(r)
+            print("-----")
+            print(flask.request.get_json())
+    return "123"
+
+
+#TODO: add ability to change file used for sending data
+@app.route("/csv")#, methods=["POST"])
+def csv():
+    file_path = "students.csv"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    days = set()
+    users = []
+
+    with open('exampledata.json', 'r') as json_file:
+        data = json_file.read()
+        for entry in json.loads(data)["people"]:
+            users.append({"key": int(entry["number"]),"value": entry})
+            for day in entry["attended"]:
+                for x in day:
+                    days.add(datetime.utcfromtimestamp(int(x) + 946684800).strftime('%Y-%m-%d'))
+
+    users.sort(key=lambda x: x["key"])
+
+    with open('./students.csv', 'a', newline='') as csvfile:
+        writer = csvBib.writer(csvfile, delimiter=';')
+        header = ['Index', 'Name']
+        for day in days:
+            header.append(day)
+        writer.writerow(header)
+        print(days)
+
+        for user in users:
+            data = set()
+            for day in user["value"]['attended']:
+                for x in day:
+                    data.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
+            line = (str(user["key"]), user["value"]['name'])
+            for day in days:
+                if day in data:
+                    line += ("Ja",)
+                else:
+                    line += ("Nein",)
+            writer.writerow(line)
+
+    return send_file("students.csv", as_attachment=True)
 
 
 if __name__ == "__main__":
