@@ -110,14 +110,6 @@ def login():
     return response;
 
 
-#@app.route("/login", methods=["POST"])
-def login():
-    print(flask.request.get_json())
-    response = flask.make_response("success");
-    response.set_cookie("auth", "true");
-    return response;
-
-
 @app.route("/username", methods=["POST"])
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -179,6 +171,8 @@ def courses():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             r = requests.get(IP + "/courses");
+            print(r.text)
+            print("something identifying")
             return r.text;
     return flask.make_response("authorisation failed"), 401
 
@@ -197,20 +191,39 @@ def student():
 @app.route("/change_user", methods=["POST"])
 def change_user():
     if checkAuth(flask.request.cookies.get("auth")):
-        if logedin[flask.request.cookies.get("auth")]["admin"]:
-            print(flask.request.get_json())
+        r = requests.get(IP + "/data");
+        data = json.loads(r.text)["people"];
+        changes = flask.request.get_json();
+        print(data)
+        print(changes)
+        for i in range(len(data)):
+            if data[i]["number"] == int(changes["id"]):
+                if logedin[flask.request.cookies.get("auth")]["admin"]:
+                    data[i]["name"] = changes["name"];
+                data[i]["time"] = changes["balance"];
+        print("---")
+        print(data)
+        r = requests.post(IP + "/change_user", json=data);
+        print(r.text)
+    return "unknown error"
 
 
 @app.route("/change_course", methods=["POST"])
 def change_course():
-    print(flask.request.data)
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             r = requests.get(IP + "/courses");
-            print(r)
-            print("-----")
-            print(flask.request.get_json())
-    return "123"
+            courses = json.loads(r.text);
+            changes = flask.request.get_json();
+
+            courses[changes["name"]] = courses.pop(changes["old"]);
+            courses[changes["name"]]["day"] = changes["day"];
+            courses[changes["name"]]["students"] = [];
+            for student in changes["students"].split(","):
+                courses[changes["name"]]["students"].append(int(student));
+            r = requests.post(IP + "/change_course", json=courses);
+            print(r.text)
+    return "unknown error"
 
 
 #TODO: add ability to change file used for sending data

@@ -2,6 +2,7 @@ async function send(address, dict) {
 	response = await fetch(address, {
 		method: "POST",
 		body: JSON.stringify(dict),
+		headers: { "content-type": "application/json; charset=UTF-8", },
 	});
 	return await response.json();
 }
@@ -13,14 +14,21 @@ function closePopup() {
 function save(id) {
 	name = document.getElementById("name").value;
 	balance = document.getElementById("balance").value;
+    
+    date = document.getElementById("attendenceDate");
+    attendence = document.getElementById("attendence");
 
 	send("/change_user",
-		{ "id": id, "name": name, "balance": balance });
+		{ "id": id, 
+          "name": name, 
+          "balance": balance, 
+          "date": date, 
+          "attendence": attendence });
 }
 
 function deleteUser(id) {
 	if (confirm("Wollen Sie diesen Account wirklich löschen?\nAlle Daten werden restlos gelöscht")) {
-		send("/delete", { "id": id });
+		send("/delete_user", { "id": id });
 	}
 }
 
@@ -34,9 +42,10 @@ function popup(id) {
 					div = document.getElementById("popup");
 					div.classList.remove("hidden");
 
+                    document.getElementById("identification").innerText = "Id: " + student.id;
+
 					document.getElementById("name").value = student.name;
 					document.getElementById("balance").value = student.balance;
-					document.getElementById("courses").value = student.courses;
 
 					document.getElementById("close")
 						.setAttribute("onclick", `closePopup()`);
