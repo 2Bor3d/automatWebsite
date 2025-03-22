@@ -16,11 +16,14 @@ function save(id) {
 
 	send("/change_user",
 		{ "id": id, "name": name, "balance": balance });
+	closePopup();
+	location.reload();
 }
 
 function deleteUser(id) {
 	if (confirm("Wollen Sie diesen Account wirklich löschen?\nAlle Daten werden restlos gelöscht")) {
 		send("/delete", { "id": id });
+		closePopup();
 	}
 }
 

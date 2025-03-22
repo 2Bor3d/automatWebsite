@@ -15,7 +15,7 @@ app = flask.Flask(__name__);
 
 logedin = {};
 
-IP = "http://192.168.4.1";
+IP = "http://127.0.0.1:5000";
 #IP = "http://127.0.0.1:5000";
 
 
@@ -47,7 +47,6 @@ def script():
         with open("login/script.js", "r") as file:
             return file.read();
 
-
 @app.route("/styles.css")
 def styles():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -76,7 +75,6 @@ def pageJs():
             return file.read();
     else:
         return flask.make_response("authorisation failed"), 401
-
 
 @app.route("/page/styles.css")
 def pageCss():
@@ -212,8 +210,6 @@ def change_course():
             print(flask.request.get_json())
     return "123"
 
-
-#TODO: add ability to change file used for sending data
 @app.route("/csv")#, methods=["POST"])
 def csv():
     file_path = "students.csv"
@@ -223,7 +219,7 @@ def csv():
     days = set()
     users = []
 
-    with open('exampledata.json', 'r') as json_file:
+    with open('exampledata.json', 'r') as json_file:#TODO: add ability to change file used for sending data
         data = json_file.read()
         for entry in json.loads(data)["people"]:
             users.append({"key": int(entry["number"]),"value": entry})
@@ -256,6 +252,9 @@ def csv():
 
     return send_file("students.csv", as_attachment=True)
 
-
+@app.route("/add_user", methods=["POST"])
+def add_user():
+    print(flask.request.form["type"])
+    return "123"
 if __name__ == "__main__":
     app.run(port=8080)
