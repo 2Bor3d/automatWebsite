@@ -2,6 +2,7 @@ async function send(address, dict) {
 	response = await fetch(address, {
 		method: "POST",
 		body: JSON.stringify(dict),
+		headers: { "content-type": "application/json; charset=UTF-8", },
 	});
 	return await response.json();
 }
@@ -11,17 +12,26 @@ function closePopup() {
 }
 
 function save(id) {
-	first = document.getElementById("firstname").value;
-	last = document.getElementById("lastname").value;
+	name = document.getElementById("name").value;
 	balance = document.getElementById("balance").value;
 
-	send("/change",
-		{ "id": id, "first": fist, "last": last, "balance": balance });
+    date = document.getElementById("attendenceDate");
+    attendence = document.getElementById("attendence");
+
+	send("/change_user",
+		{ "id": id,
+          "name": name,
+          "balance": balance,
+          "date": date,
+          "attendence": attendence });
+    closePopup();
+    location.reload();
 }
 
 function deleteUser(id) {
 	if (confirm("Wollen Sie diesen Account wirklich löschen?\nAlle Daten werden restlos gelöscht")) {
-		send("/delete", { "id": id });
+		send("/delete_user", { "id": id });
+        closePopup();
 	}
 }
 
@@ -35,16 +45,17 @@ function popup(id) {
 					div = document.getElementById("popup");
 					div.classList.remove("hidden");
 
+                    document.getElementById("identification").innerText = "Id: " + student.id;
+
 					document.getElementById("name").value = student.name;
 					document.getElementById("balance").value = student.balance;
-					document.getElementById("courses").value = student.courses;
 
 					document.getElementById("close")
 						.setAttribute("onclick", `closePopup()`);
 					document.getElementById("save")
-						.setAttribute("onclick", `save(${id})`);
+						.setAttribute("onclick", `save('${id}')`);
 					document.getElementById("delete")
-						.setAttribute("onclick", `deleteUser(${id})`);
+						.setAttribute("onclick", `deleteUser('${id}')`);
 				}
 			});
 		});
