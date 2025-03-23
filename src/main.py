@@ -15,8 +15,8 @@ app = flask.Flask(__name__);
 
 logedin = {};
 
-IP = "http://127.0.0.1:5000";
 #IP = "http://127.0.0.1:5000";
+IP = "http://192.168.4.1";
 
 
 def checkAuth(auth: str) -> bool:
@@ -89,13 +89,13 @@ def pageCss():
 @app.route("/login", methods=["POST"])
 def login():
     attempt = flask.request.get_json();
-    print("---")
     r = requests.get(IP + "/users");
-    print(r.content)
-
     users = json.loads(r.text);
-    print(attempt)
-    print(users)
+
+    r = requests.get(IP + "/courses");
+    print(r.text)
+    user_courses = json.loads(
+
     response = flask.make_response("wrong username or password", 401)
     for user in users:
         if user["username"] == attempt["username"] and user["password"] == attempt["password"]:
@@ -138,7 +138,7 @@ def entrys():
         user = logedin[flask.request.cookies.get("auth")];
         if not user["admin"] or user["sub"] != "":
             r = requests.get(IP + "/courses");
-            courses = json.load(r.text);
+            courses = json.loads(r.text);
             students = {};
             if user["sub"] == "":
                 for cours in user["courses"]:
@@ -157,7 +157,7 @@ def entrys():
             new.append({
                 "id": entry["number"],
                 "name": entry["name"],
-                "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0]+946684800).strftime('%Y-%m-%d') if len(entry["attended"])>0 else "None",
+                "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime('%Y-%m-%d') if len(entry["attended"])>0 else "None",
                 "balance": entry["time"]});
         return new;
     else:

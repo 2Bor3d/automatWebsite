@@ -26,9 +26,8 @@ function load() {
 
 function logout() {
 	if (confirm("wollen sie sich ausloggen?")) {
-		fetch("/logout", {
-			method: "POST"
-		}).then(() => { window.location.reload() });
+        document.cookie = "auth=;expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+		window.location.reload();
 	}
 }
 
