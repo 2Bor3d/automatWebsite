@@ -136,7 +136,7 @@ def move():
 
 
 @app.route("/entrys", methods=["POST"])
-def entrys():
+def entrys(raw=False):
     if checkAuth(flask.request.cookies.get("auth")):
         r = requests.get(IP + "/data");
         entrys = json.loads(r.text)["people"];
@@ -162,11 +162,19 @@ def entrys():
 
         new = [];
         for entry in entrys:
-            new.append({
-                "id": entry["number"],
-                "name": entry["name"],
-                "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime('%Y-%m-%d') if len(entry["attended"])>0 else "None",
-                "balance": entry["time"]});
+            if raw:
+                new.append({
+                    "id": entry["number"],
+                    "name": entry["name"],
+                    "attendance": entry["attended"],
+                    "balance": entry["time"]
+                });
+            else:
+                new.append({
+                    "id": entry["number"],
+                    "name": entry["name"],
+                    "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime('%Y-%m-%d') if len(entry["attended"])>0 else "None",
+                    "balance": entry["time"]});
         return new;
     else:
         return flask.make_response("authorisation failed"), 401
@@ -239,11 +247,14 @@ def csv():
 
     with open('exampledata.json', 'r') as json_file:#TODO: add ability to change file used for sending data
         data = json_file.read()
-        for entry in json.loads(data)["people"]:
-            users.append({"key": int(entry["number"]),"value": entry})
-            for day in entry["attended"]:
+        data = entrys(True)
+        print(data)
+        for entry in data:
+            print(entry)
+            users.append({"key": int(entry["id"]),"value": entry})
+            for day in entry["attendance"]:
                 for x in day:
-                    days.add(datetime.utcfromtimestamp(int(x) + 946684800).strftime('%Y-%m-%d'))
+                    days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
 
     users.sort(key=lambda x: x["key"])
 
@@ -257,7 +268,7 @@ def csv():
 
         for user in users:
             data = set()
-            for day in user["value"]['attended']:
+            for day in user["value"]['attendance']:
                 for x in day:
                     data.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
             line = (str(user["key"]), user["value"]['name'])
