@@ -32,7 +32,7 @@ def dispense():
     if flask.request.json["nr"] in range(0, 8):
         return "success";
     else:
-        return "error: 235";
+        return "response: 235";
 
 
 @app.route("/ping")

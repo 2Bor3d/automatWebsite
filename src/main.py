@@ -203,7 +203,7 @@ def change_user():
         print(data)
         r = requests.post(IP + "/change_user", json=data);
         print(r.text)
-    return "unknown error"
+    return "unknown response"
 
 
 @app.route("/change_course", methods=["POST"])
@@ -221,7 +221,7 @@ def change_course():
                 courses[changes["name"]]["students"].append(int(student));
             r = requests.post(IP + "/change_course", json=courses);
             print(r.text)
-    return "unknown error"
+    return "unknown response"
 
 @app.route("/csv")#, methods=["POST"])
 def csv():
@@ -267,7 +267,24 @@ def csv():
 
 @app.route("/add_user", methods=["POST"])
 def add_user():
-    print(flask.request.form["type"])
-    return "123"
+    try:
+        rfid = flask.request.form["rfid"] is not None
+        username = flask.request.form["name"]
+        usertype = flask.request.form["type"]
+        if usertype == "teacher" or username == "admin":
+            mail = flask.request.form["mail"]
+            password = flask.request.form["password"]
+            if password == "" or mail == "":
+                return "response: 235"
+    except:
+        with open("add/response/error.html", "r") as file:
+            return file.read()
+    #TODO: add user to database
+    if rfid:
+        with open("add/response/successCard.html", "r") as file:
+            return file.read()
+    else:
+        with open("add/response/successNoCard.html", "r") as file:
+            return file.read()
 if __name__ == "__main__":
     app.run(port=8080)
