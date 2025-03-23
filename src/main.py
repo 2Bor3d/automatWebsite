@@ -268,7 +268,7 @@ def csv():
 @app.route("/add_user", methods=["POST"])
 def add_user():
     try:
-        rfid = flask.request.form["rfid"] is not None
+        rfid =  "rfid" in flask.request.form.keys()
         username = flask.request.form["name"]
         usertype = flask.request.form["type"]
         if usertype == "teacher" or username == "admin":
@@ -276,7 +276,7 @@ def add_user():
             password = flask.request.form["password"]
             if password == "" or mail == "":
                 return "response: 235"
-    except:
+    except Exception as e:
         with open("add/response/error.html", "r") as file:
             return file.read()
     #TODO: add user to database
@@ -286,5 +286,6 @@ def add_user():
     else:
         with open("add/response/successNoCard.html", "r") as file:
             return file.read()
+
 if __name__ == "__main__":
     app.run(port=8080)
