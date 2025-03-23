@@ -271,7 +271,7 @@ def add_user():
         rfid =  "rfid" in flask.request.form.keys()
         username = flask.request.form["name"]
         usertype = flask.request.form["type"]
-        if usertype == "teacher" or username == "admin":
+        if usertype == "teacher" or usertype == "admin":
             mail = flask.request.form["mail"]
             password = flask.request.form["password"]
             if password == "" or mail == "":
@@ -285,11 +285,20 @@ def add_user():
             return file.read()
     else:
         with open("addStudent/response/successNoCard.html", "r") as file:
-            return file.read()
+            return file.read().replace("{user}", username)
 
 @app.route("/add_course", methods=["POST"])
 def add_course():
-    return "sd"
+    try:
+        name = flask.request.form["name"]
+        day = flask.request.form["day"]
+        leherer = flask.request.form["leherer"]
+    except Exception as e:
+        with open("addCourse/response/error.html", "r") as file:
+            return file.read()
+    #TODO: add course to database
+    with open("addCourse/response/success.html" , "r") as file:
+        return file.read().__str__().replace("{Kurs}", name).replace("{day}", day).replace("{leherer}", leherer)
 
 @app.route("/getTeachers", methods=["POST"])
 def get_teachers():
