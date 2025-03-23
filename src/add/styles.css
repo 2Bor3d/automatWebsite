@@ -1,0 +1,17 @@
+label {
+	float: left;
+}
+
+.hidden {
+	display: none;
+}
+
+.field {
+	width: 100%;
+	padding: 2px;
+}
+
+#container {
+	width: max-content;
+}
+

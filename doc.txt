@@ -1,0 +1,10 @@
+route:			"/"
+auth:			none
+return			"login/index.html"
+auth:			"user"
+return:			"index.html"
+
+route:			"/script.js"
+auth:			none
+return:
+

@@ -105,7 +105,7 @@ def login():
                     courses_user.append(course);
             random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
             ############################################# fails 1/1431655765 times
-            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": courses_user, "position": "list", "sub": ""};
+            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": courses_user, "position": "list", "sub": {}};
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -128,6 +128,8 @@ def move():
         print(flask.request.get_json())
         logedin[flask.request.cookies.get("auth")]["position"] = \
             flask.request.get_json()["position"];
+        logedin[flask.request.cookies.get("auth")]["sub"] = \
+            flask.request.get_json()["sub"];
         return flask.make_response("success");
     else:
         return flask.make_response("authorisation failed"), 401
@@ -140,17 +142,17 @@ def entrys():
         entrys = json.loads(r.text)["people"];
 
         user = logedin[flask.request.cookies.get("auth")];
-        if not user["admin"] or user["sub"] != "":
+        if not user["admin"] or user["sub"] != {}:
             r = requests.get(IP + "/courses");
             courses = json.loads(r.text);
             students = set({});
             print(user)
             print("--")
-            if user["sub"] == "":
+            if user["sub"] == {}:
                 for cours in user["courses"]:
                     students = students.union(set(courses[cours]["students"]));
             else:
-                students = set(courses[user["sub"]]["students"]);
+                students = set(courses[user["sub"]["course"]]["students"]);
 
             cleaned = [];
             for entry in entrys:
@@ -175,8 +177,6 @@ def courses():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             r = requests.get(IP + "/courses");
-            print(r.text)
-            print("something identifying")
             return r.text;
     return flask.make_response("authorisation failed"), 401
 

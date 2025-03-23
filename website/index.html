@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>B.A.M.B.I. v.0.1</title>
+		<meta name="viewport" contetn="width=device-width, initial-scale=1.0">
+		<script src="script.js"></script>
+		<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+		<link rel="stylesheet" href="styles.css">
+    </head>
+    <body onload="load()">
+		<!-- <div id="title"> -->
+			<header id="header">
+				<div class="header-logo"><img src="static/LogoBambiWebsite.png" alt="logo"/></div>
+				<div class="header-text">MINT-Zentrum Seeheim</div>
+				<div id="user">
+					<p onclick="logout()" id="username" 
+					class="clickable">Unknown</p>
+				</div>
+			<!-- </div> -->
+			<!-- <div id="user">
+				<p onclick="logout()" id="username" 
+				class="clickable">Unknown</p>
+			</div> -->
+		</header>
+		<main id="main">
+			<nav id="bar">
+				<ul>
+					<li><p onclick="move('list')" 
+						class="clickable">liste</p></li>
+					<li><p onclick="expand()" class="clickable">kurse</p>
+						<ul class="sub hidden" id="sub"></ul>
+					</li>
+					<li><p onclick="move('suche')" 
+						class="clickable">suche</p></li>
+					<li><p onclick="move('add')" 
+						class="clickable admin hidden">add</p></li>
+					<li><p onclick="move('remove')" 
+						class="clickable admin hidden">remove</p></li>
+					<li><p onclick="move('mixed')" 
+						class="clickable admin hidden">miscellaneous</p></li>
+				</ul>
+			</nav>
+			<div id="page">
+				<iframe id="iframe" src="page.html"></iframe>
+			</div>
+		</main>
+		<footer>
+			<p>&copy; Annika Reinhardt - all rights reserved | legaly responsible: Annika Reinhardt</p>
+		</footer>
+      </body>
+</html>

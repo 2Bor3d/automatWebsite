@@ -15,10 +15,11 @@ function save(id) {
 	name = document.getElementById("name").value;
 	day = document.getElementById("day").value;
 	students = document.getElementById("students").value;
+    users = document.getElementById("users").value;
     console.log({ "old": id, "name": name, "day": day, "students": students });
 
 	send("/change_course",
-		{ old: id, name: name, day: day, students: students });
+		{ old: id, name: name, day: day, students: students, users: users });
 }
 
 function deleteUser(id) {
@@ -41,6 +42,8 @@ function popup(id) {
 					document.getElementById("day").value = json[value]["day"];
 					document.getElementById("students").value = 
                         json[value]["students"];
+                    document.getElementById("users").vlaue = 
+                        json[value]["users"];
 
 					document.getElementById("close")
 						.setAttribute("onclick", `closePopup()`);
