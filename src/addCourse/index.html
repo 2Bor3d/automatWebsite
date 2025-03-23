@@ -9,45 +9,22 @@
 </head>
 <body>
 <div id="container">
-    <form method="POST" action="/add_user" id="form">
-        <div class="field">
-            <label for="type">type: </label>
-            <select id="type" name="type" onchange="setVisibility(this.value)">
-                <option value="teacher">teacher</option>
-                <option value="student">student</option>
-                <option value="admin">admin</option>
-            </select>
-        </div>
-
+    <form method="POST" action="/add_course" id="form">
         <div class="field">
             <label for="name">name: </label>
             <input type="text" id="name" name="name">
         </div>
-
-        <div class="field" id="div_mail">
-            <label for="mail">Mail: </label>
-            <input type="text" id="mail" name="mail">
-        </div>
-
-        <div class="field" id="div_password">
-            <label for="password" class="hidden">password:</label>
-            <input type="password" id="password" class="hidden" name="password">
-        </div>
-        <!-- TODO: auto laod course-->
         <div class="field">
-            <label for="courses">courses</label>
-            <select id="courses" name="courses">
-                <option value="none">none</option>
-                <option value="nix">nix</option>
+            <label for="leherer">Lehrkraft:</label>
+            <select id="leherer" name="lehrer" aria-multiselectable="true" multiple>
+                <option value="none">Keine</option>
+                <option value="none">Kdeine</option>
+                <option value="none">Kedine</option>
+                <option value="none">Kdeine</option>
             </select>
         </div>
-
-        <div class="field">
-            <label for="rfid">add rfid card</label>
-            <input id="rfid" type="checkbox" checked name="rfid">
-        </div>
         <button>OK</button>
-        <script>submitF()</script>
+        <script>loadSite()</script>
     </form>
 </div>
 </body>

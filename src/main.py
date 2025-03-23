@@ -186,49 +186,6 @@ def student():
     else:
         return flask.make_response("authorisation failed"), 401
 
-#TODO: add ability to change file used for sending data
-@app.route("/csv")#, methods=["POST"])
-def csv():
-    file_path = "students.csv"
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-    days = set()
-    users = []
-
-    with open('exampledata.json', 'r') as json_file:
-        data = json_file.read()
-        for entry in json.loads(data)["people"]:
-            users.append({"key": int(entry["number"]),"value": entry})
-            for day in entry["attended"]:
-                for x in day:
-                    days.add(datetime.utcfromtimestamp(int(x)+946684800).strftime('%Y-%m-%d'))
-
-    users.sort(key=lambda x: x["key"])
-
-    with open('./students.csv', 'a', newline='') as csvfile:
-        writer = csvBib.writer(csvfile, delimiter=';')
-        header = ['Index', 'Name']
-        for day in days:
-            header.append(day)
-        writer.writerow(header)
-        print(days)
-
-        for user in users:
-            data = set()
-            for day in user["value"]['attended']:
-                for x in day:
-                    data.add(datetime.utcfromtimestamp(x+946684800).strftime('%Y-%m-%d'))
-            line = (str(user["key"]), user["value"]['name'])
-            for day in days:
-                if day in data:
-                    line += ("Ja",)
-                else:
-                    line += ("Nein",)
-            writer.writerow(line)
-
-    return send_file("students.csv", as_attachment=True)
-
 @app.route("/change_user", methods=["POST"])
 def change_user():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -330,5 +287,12 @@ def add_user():
         with open("addStudent/response/successNoCard.html", "r") as file:
             return file.read()
 
+@app.route("/add_course", methods=["POST"])
+def add_course():
+    return "sd"
+
+@app.route("/getTeachers", methods=["POST"])
+def get_teachers():
+    return {"teachers": ["Sabine Reinhardt", "Jost"], "admin": ["Ben Schnorrenberger"]}
 if __name__ == "__main__":
     app.run(port=8080)
