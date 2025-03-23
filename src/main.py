@@ -95,7 +95,7 @@ def login():
 
     r = requests.get(IP + "/courses");
     print(r.text)
-    user_courses = json.loads(
+    user_courses = json.loads(r.text);
 
     response = flask.make_response("wrong username or password", 401)
     for user in users:
