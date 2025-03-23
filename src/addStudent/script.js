@@ -19,6 +19,24 @@ function setVisibility(type) {
     console.log("SDa")
 }
 
+function load() {
+    submitF();
+    fetch("/courses", {
+        method: "POST"
+    }).then((response) => {
+        response.json().then((json) => {
+            let opt;
+            console.log(json);
+            Object.keys(json).forEach((t) => {
+                opt = document.createElement('option');
+                opt.value = t;
+                opt.text = t;
+                document.getElementById("courses").appendChild(opt);
+            })
+        })
+    });
+}
+
 function submitF() {
     document.getElementById("form").addEventListener("submit", function (event) {
         event.preventDefault();

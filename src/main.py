@@ -15,8 +15,8 @@ app = flask.Flask(__name__);
 
 logedin = {};
 
-#IP = "http://127.0.0.1:5000";
-IP = "http://192.168.4.1";
+IP = "http://127.0.0.1:5000";
+#IP = "http://192.168.4.1";
 
 
 def checkAuth(auth: str) -> bool:
@@ -237,7 +237,7 @@ def csv():
     days = set()
     users = []
 
-    with open('exampledata.json', 'r') as json_file:#TODO: addStudent ability to change file used for sending data
+    with open('exampledata.json', 'r') as json_file:#TODO: add ability to change file used for sending data
         data = json_file.read()
         for entry in json.loads(data)["people"]:
             users.append({"key": int(entry["number"]),"value": entry})
@@ -297,16 +297,17 @@ def add_course():
     try:
         name = flask.request.form["name"]
         day = flask.request.form["day"]
-        leherer = flask.request.form["leherer"]
+        lehrer = flask.request.form["lehrer"]
     except Exception as e:
         with open("addCourse/response/error.html", "r") as file:
             return file.read()
     #TODO: add course to database
     with open("addCourse/response/success.html" , "r") as file:
-        return file.read().__str__().replace("{Kurs}", name).replace("{day}", day).replace("{leherer}", leherer)
+        return file.read().__str__().replace("{kurs}", name).replace("{day}", day).replace("{lehrer}", lehrer)
 
-@app.route("/getTeachers", methods=["POST"])
+@app.route("/getTeachers", methods=["GET"])
 def get_teachers():
+    #TODO: load teachers
     return {"teachers": ["Sabine Reinhardt", "Jost"], "admin": ["Ben Schnorrenberger"]}
 if __name__ == "__main__":
     app.run(port=8080)

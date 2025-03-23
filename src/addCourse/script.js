@@ -1,22 +1,23 @@
 function loadSite() {
     submitF();
     fetch("/getTeachers", {
-        method: "POST"
+        method: "GET"
     }).then((response) => {
         response.json().then((json) => {
             let opt;
-            for (const key in json["teachers"]) {
+            console.log(json);
+            json["teachers"].forEach((t) => {
                 opt = document.createElement('option');
-                opt.value = key;
-                opt.text = key;
-                document.getElementById("leherer").appendChild(opt);
-            }
-            for (const key in json["admin"]) {
+                opt.value = t;
+                opt.text = t;
+                document.getElementById("lehrer").appendChild(opt);
+            });
+            json["admin"].forEach((t) => {
                 opt = document.createElement('option');
-                opt.value = key;
-                opt.text = key;
-                document.getElementById("leherer").appendChild(opt);
-            }
+                opt.value = t;
+                opt.text = t;
+                document.getElementById("lehrer").appendChild(opt);
+            });
         })
     });
 }
@@ -28,12 +29,11 @@ function submitF() {
             noContent("Name");
             return;
         }
-        if (document.getElementById("leherer").value === "none") {
+        if (document.getElementById("lehrer").value === "none") {
             console.log(document.getElementById("courses").value);
             noContent("Kurs");
             return;
         }
-        console.log(type);
         document.getElementById("form").submit();
     });
 }
