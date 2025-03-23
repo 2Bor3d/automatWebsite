@@ -116,7 +116,7 @@ def login():
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
         return logedin[flask.request.cookies.get("auth")];
-        #return {"username": "Reinhardt", "admin": True, 
+        #return {"username": "Reinhardt", "admin": True,
         #        "courses": ["Technik", "Informatik"]};
     else:
         return flask.make_response("authorisation failed"), 401
@@ -236,25 +236,20 @@ def change_course():
             print(r.text)
     return "unknown response"
 
-@app.route("/csv")#, methods=["POST"])
-def csv():
+@app.route("/csv", methods=["POST"])
+def csv():#TODO: use exact course and date
+    print(flask.request.form.to_dict())
     file_path = "students.csv"
     if os.path.exists(file_path):
         os.remove(file_path)
-
     days = set()
     users = []
-
-    with open('exampledata.json', 'r') as json_file:#TODO: add ability to change file used for sending data
-        data = json_file.read()
-        data = entrys(True)
-        print(data)
-        for entry in data:
-            print(entry)
-            users.append({"key": int(entry["id"]),"value": entry})
-            for day in entry["attendance"]:
-                for x in day:
-                    days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
+    data = entrys(True)
+    for entry in data:
+        users.append({"key": int(entry["id"]),"value": entry})
+        for day in entry["attendance"]:
+            for x in day:
+                days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
 
     users.sort(key=lambda x: x["key"])
 

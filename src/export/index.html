@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>B.A.M.B.I. v.0.1</title>
+    <meta name="viewport" contetn="width=device-width, initial-scale=1.0">
+    <script src="/page/script.js"></script>
+    <link rel="stylesheet" href="page/styles.css">
+</head>
+<body>
+<div id="container">
+    <form method="POST" action="/csv" id="form">
+        <div class="field">
+            <label for="from">Von: </label>
+            <input type="date" id="from" name="from">
+        </div>
+
+        <div class="field">
+            <label for="to">Bis: </label>
+            <input type="date" id="to" name="to">
+        </div>
+
+        <div class="field">
+            <label for="course">Kurs:</label>
+            <select id="course" name="course">
+                <option value="all">All</option>
+            </select>
+        </div>
+
+        <button>OK</button>
+        <script>load()</script>
+    </form>
+</div>
+</body>
+</html>
