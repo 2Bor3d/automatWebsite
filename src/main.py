@@ -232,7 +232,7 @@ def csv():
     days = set()
     users = []
 
-    with open('exampledata.json', 'r') as json_file:#TODO: add ability to change file used for sending data
+    with open('exampledata.json', 'r') as json_file:#TODO: addStudent ability to change file used for sending data
         data = json_file.read()
         for entry in json.loads(data)["people"]:
             users.append({"key": int(entry["number"]),"value": entry})
@@ -277,14 +277,14 @@ def add_user():
             if password == "" or mail == "":
                 return "response: 235"
     except Exception as e:
-        with open("add/response/error.html", "r") as file:
+        with open("addStudent/response/error.html", "r") as file:
             return file.read()
-    #TODO: add user to database
+    #TODO: addStudent user to database
     if rfid:
-        with open("add/response/successCard.html", "r") as file:
+        with open("addStudent/response/successCard.html", "r") as file:
             return file.read()
     else:
-        with open("add/response/successNoCard.html", "r") as file:
+        with open("addStudent/response/successNoCard.html", "r") as file:
             return file.read()
 
 if __name__ == "__main__":
