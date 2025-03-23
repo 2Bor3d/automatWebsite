@@ -144,6 +144,8 @@ def entrys():
             r = requests.get(IP + "/courses");
             courses = json.loads(r.text);
             students = set({});
+            print(user)
+            print("--")
             if user["sub"] == "":
                 for cours in user["courses"]:
                     students = students.union(set(courses[cours]["students"]));
