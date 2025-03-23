@@ -75,9 +75,9 @@ def data():
 @app.route("/courses", methods=["GET"])
 def courses():
     return {
-            "Technik": {"day": 3, "people": [1, 2, 3]}, 
-            "Informatik": {"day": 4, "people": [4, 5, 6]}, 
-            "Physik": {"day": 3, "people": [4, 5, 6]}
+            "Technik": {"day": 3, "people": [1, 2, 3], "users": [1, 2]}, 
+            "Informatik": {"day": 4, "people": [4, 5, 6], "users": [1]}, 
+            "Physik": {"day": 3, "people": [4, 5, 6], "users": [2, 3]}
             }
 
 
