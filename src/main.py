@@ -94,15 +94,18 @@ def login():
     users = json.loads(r.text);
 
     r = requests.get(IP + "/courses");
-    print(r.text)
-    user_courses = json.loads(r.text);
+    courses_file = json.loads(r.text);
 
     response = flask.make_response("wrong username or password", 401)
     for user in users:
         if user["username"] == attempt["username"] and user["password"] == attempt["password"]:
+            courses_user = [];
+            for course in courses_file.keys():
+                if user["id"] in courses_file[course]["users"]:
+                    courses_user.append(course);
             random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
             ############################################# fails 1/1431655765 times
-            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": user["groups"], "position": "list", "sub": ""};
+            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": courses_user, "position": "list", "sub": ""};
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -140,10 +143,12 @@ def entrys():
         if not user["admin"] or user["sub"] != "":
             r = requests.get(IP + "/courses");
             courses = json.loads(r.text);
-            students = {};
+            students = set({});
+            print(user)
+            print("--")
             if user["sub"] == "":
                 for cours in user["courses"]:
-                    students = students + set(courses[cours]["students"]);
+                    students = students.union(set(courses[cours]["students"]));
             else:
                 students = set(courses[user["sub"]]["students"]);
 

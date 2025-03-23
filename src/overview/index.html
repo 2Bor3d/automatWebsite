@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>B.A.M.B.I. v.0.1</title>
+		<meta name="viewport" contetn="width=device-width, initial-scale=1.0">
+		<script src="/page/script.js"></script>
+		<link rel="stylesheet" href="page/styles.css">
+    </head>
+    <body onload="load()">
+		<main id="list">
+			<table id="table">
+				<tr>
+					<th>Name</th>
+					<th>Tag</th>
+					<th>Teilnehmende</th>
+				</tr>
+			</table>
+		</main>
+		<div id="popup" class="hidden">
+			<button id="close" onclick="close()">Schließen</button>
+			<div class="row">
+				<p class="lable">Name: </p>
+				<input id="name">
+			</div>
+			<div class="row">
+				<p class="lable">Tag: </p>
+				<input id="day" type="number">
+			</div>
+			<div class="row">
+				<p class="lable">Teilnehmende: </p>
+				<input id="students">
+			</div>
+			<div class="row">
+				<button id="save">Speichern</button>
+				<button id="delete">Löschen</button>
+		</div>
+	</body>
+</html>
+
