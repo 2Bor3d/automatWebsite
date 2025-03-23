@@ -57,6 +57,7 @@ def mint():
 def users():
     return [
     {
+        "id": 1,
         "username": "david.glaenzel@gmail.com",
         "password": "12345",
         "groups": ["forschen"],
