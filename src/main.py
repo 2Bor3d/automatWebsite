@@ -48,6 +48,7 @@ def script():
         with open("login/script.js", "r") as file:
             return file.read();
 
+
 @app.route("/styles.css")
 def styles():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -192,6 +193,7 @@ def student():
     else:
         return flask.make_response("authorisation failed"), 401
 
+
 @app.route("/change_user", methods=["POST"])
 def change_user():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -212,6 +214,24 @@ def change_user():
     return "unknown response"
 
 
+@app.route("/delete_user", methods=["POST"])
+def delete_user():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            print(flask.request.json)
+            r = requests.get(IP + "/data");
+            data = json.loads(r.text)["people"];
+            user = flask.request.get_json()["id"];
+
+            for i in range(len(data)):
+                if data[i]["number"] == int(user):
+                    data.pop(i);
+                    break;
+            r = requests.post(IP + "/change_user", json=data);
+            return "success"
+    return "fail"
+
+
 @app.route("/change_course", methods=["POST"])
 def change_course():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -228,6 +248,7 @@ def change_course():
             r = requests.post(IP + "/change_course", json=courses);
             print(r.text)
     return "unknown response"
+
 
 @app.route("/csv")#, methods=["POST"])
 def csv():
