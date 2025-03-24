@@ -104,7 +104,12 @@ def login():
                     courses_user.append(course);
             random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
             ############################################# fails 1/1431655765 times
-            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": courses_user, "position": "list", "sub": {}};
+            logedin[random_bytes] = {"id": user["id"],
+                                     "username": user["username"],
+                                     "admin": user["admin"],
+                                     "courses": courses_user,
+                                     "position": "list",
+                                     "sub": {}};
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -114,6 +119,17 @@ def login():
 @app.route("/username", methods=["POST"])
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
+        r = requests.get(IP + "/courses");
+        courses_file = json.loads(r.text);
+
+        courses_user = [];
+        for course in courses_file.keys():
+            if logedin[flask.request.cookies.get("auth")] \
+                    in courses_file[course]["users"]:
+                courses_user.append(course);
+
+        logedin[flask.request.cookies.get("auth")]["courses"] = courses_user;
+
         return logedin[flask.request.cookies.get("auth")];
     else:
         return flask.make_response("authorisation failed"), 401
