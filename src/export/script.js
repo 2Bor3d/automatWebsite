@@ -2,7 +2,7 @@ function load() {
     document.getElementById("form").addEventListener("submit", function (event) {
         event.preventDefault();
         document.getElementById("form").submit();
-        window.parent.location.replace(window.parent.location.href);
+        //window.parent.location.replace(window.parent.location.href);
     });
     fetch("/courses", {
         method: "POST",

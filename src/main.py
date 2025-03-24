@@ -236,9 +236,46 @@ def change_course():
             print(r.text)
     return "unknown response"
 
+def inRange(fromm, to, x):
+    print(0,fromm, to, x)
+    if fromm== '':
+        fromm = "0000-00-00";
+    if to == '':
+        to = "9999-99-99";
+    if x == '':
+        raise "x cant be null"
+    print(1,fromm, to, x)
+    fromm = str(fromm).split("-")
+    to = str(to).split("-")
+    x = str(x).split("-")
+    print(2,fromm, to, x)
+    if len(fromm) != 3 or len(to) != 3 or len(x) != 3:
+        raise "Wrong format!";
+    if int(fromm[0]) > int(x[0]):
+        return False;
+    elif int(fromm[1]) > int(x[1]):
+        return False;
+    elif int(fromm[2]) > int(x[2]):
+        return False;
+
+    if int(to[0]) < int(x[0]):
+        return False;
+    elif int(to[1]) < int(x[1]):
+        return False;
+    elif int(to[2]) < int(x[2]):
+        return False;
+
+    return True
+
+
 @app.route("/csv", methods=["POST"])
 def csv():#TODO: use exact course and date -> Ben
+    print("Hellooooooo")
     print(flask.request.form.to_dict())
+    fromm = flask.request.form["from"]
+    to = flask.request.form["to"]
+    course = flask.request.form["course"]
+
     file_path = "students.csv"
     if os.path.exists(file_path):
         os.remove(file_path)
@@ -249,6 +286,8 @@ def csv():#TODO: use exact course and date -> Ben
         users.append({"key": int(entry["id"]),"value": entry})
         for day in entry["attendance"]:
             for x in day:
+                if not inRange(fromm, to,datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
+                    continue;
                 days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
 
     users.sort(key=lambda x: x["key"])
@@ -265,6 +304,8 @@ def csv():#TODO: use exact course and date -> Ben
             data = set()
             for day in user["value"]['attendance']:
                 for x in day:
+                    if not inRange(fromm, to,datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
+                        continue;
                     data.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
             line = (str(user["key"]), user["value"]['name'])
             for day in days:
