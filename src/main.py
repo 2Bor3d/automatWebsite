@@ -237,18 +237,15 @@ def change_course():
     return "unknown response"
 
 def inRange(fromm, to, x):
-    print(0,fromm, to, x)
     if fromm== '':
         fromm = "0000-00-00";
     if to == '':
         to = "9999-99-99";
     if x == '':
         raise "x cant be null"
-    print(1,fromm, to, x)
     fromm = str(fromm).split("-")
     to = str(to).split("-")
     x = str(x).split("-")
-    print(2,fromm, to, x)
     if len(fromm) != 3 or len(to) != 3 or len(x) != 3:
         raise "Wrong format!";
     if int(fromm[0]) > int(x[0]):
@@ -269,7 +266,6 @@ def inRange(fromm, to, x):
 
 @app.route("/csv", methods=["POST"])
 def csv():#TODO: use exact course and date -> Ben
-    print(flask.request.form.to_dict())
     fromm = flask.request.form["from"]
     to = flask.request.form["to"]
     course = flask.request.form["course"]
