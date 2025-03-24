@@ -1,0 +1,1 @@
+[{"admin": true, "id": 1, "number": 2, "password": "123", "username": "david.glaenzel@gmail.com"}, {"admin": false, "id": 2, "number": 1, "password": "1234", "username": "01bensch@gmail.com"}, {"id": 3, "username": "annika.s.reinhardt@gmx.de", "password": "123", "admin": false, "number": 69}]

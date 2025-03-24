@@ -16,7 +16,9 @@ app = flask.Flask(__name__);
 logedin = {};
 
 IP = "http://127.0.0.1:5000";
-#IP = "http://192.168.4.1";
+
+
+# IP = "http://192.168.4.1";
 
 
 def checkAuth(auth: str) -> bool:
@@ -75,6 +77,7 @@ def pageJs():
             return file.read();
     else:
         return flask.make_response("authorisation failed"), 401
+
 
 @app.route("/page/styles.css")
 def pageCss():
@@ -149,7 +152,7 @@ def move():
 
 
 @app.route("/entrys", methods=["POST"])
-def entrys():
+def entrys(raw=False):
     if checkAuth(flask.request.cookies.get("auth")):
         r = requests.get(IP + "/data");
         entrys = json.loads(r.text)["people"];
@@ -175,11 +178,20 @@ def entrys():
 
         new = [];
         for entry in entrys:
-            new.append({
-                "id": entry["number"],
-                "name": entry["name"],
-                "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime('%Y-%m-%d') if len(entry["attended"])>0 else "None",
-                "balance": entry["time"]});
+            if raw:
+                new.append({
+                    "id": entry["number"],
+                    "name": entry["name"],
+                    "attendance": entry["attended"],
+                    "balance": entry["time"]
+                });
+            else:
+                new.append({
+                    "id": entry["number"],
+                    "name": entry["name"],
+                    "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime(
+                        '%Y-%m-%d') if len(entry["attended"]) > 0 else "None",
+                    "balance": entry["time"]});
         return new;
     else:
         return flask.make_response("authorisation failed"), 401
@@ -347,22 +359,55 @@ def delete_course():
     return "fail";
 
 
-@app.route("/csv")#, methods=["POST"])
-def csv():
+
+def inRange(fromm, to, x):
+    if fromm == '':
+        fromm = "0000-00-00";
+    if to == '':
+        to = "9999-99-99";
+    if x == '':
+        raise "x cant be null"
+    fromm = str(fromm).split("-")
+    to = str(to).split("-")
+    x = str(x).split("-")
+    if len(fromm) != 3 or len(to) != 3 or len(x) != 3:
+        raise "Wrong format!";
+    if int(fromm[0]) > int(x[0]):
+        return False;
+    elif int(fromm[1]) > int(x[1]):
+        return False;
+    elif int(fromm[2]) > int(x[2]):
+        return False;
+
+    if int(to[0]) < int(x[0]):
+        return False;
+    elif int(to[1]) < int(x[1]):
+        return False;
+    elif int(to[2]) < int(x[2]):
+        return False;
+
+    return True
+
+
+@app.route("/csv", methods=["POST"])
+def csv():  # TODO: use exact course -> Ben
+    fromm = flask.request.form["from"]
+    to = flask.request.form["to"]
+    course = flask.request.form["course"]
+
     file_path = "students.csv"
     if os.path.exists(file_path):
         os.remove(file_path)
-
     days = set()
     users = []
-
-    with open('exampledata.json', 'r') as json_file:#TODO: add ability to change file used for sending data
-        data = json_file.read()
-        for entry in json.loads(data)["people"]:
-            users.append({"key": int(entry["number"]),"value": entry})
-            for day in entry["attended"]:
-                for x in day:
-                    days.add(datetime.utcfromtimestamp(int(x) + 946684800).strftime('%Y-%m-%d'))
+    data = entrys(True)
+    for entry in data:
+        users.append({"key": int(entry["id"]), "value": entry})
+        for day in entry["attendance"]:
+            for x in day:
+                if not inRange(fromm, to, datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
+                    continue;
+                days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
 
     users.sort(key=lambda x: x["key"])
 
@@ -376,8 +421,10 @@ def csv():
 
         for user in users:
             data = set()
-            for day in user["value"]['attended']:
+            for day in user["value"]['attendance']:
                 for x in day:
+                    if not inRange(fromm, to, datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
+                        continue;
                     data.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
             line = (str(user["key"]), user["value"]['name'])
             for day in days:
@@ -388,29 +435,6 @@ def csv():
             writer.writerow(line)
 
     return send_file("students.csv", as_attachment=True)
-
-
-# @app.route("/add_user", methods=["POST"])
-def add_user():
-    try:
-        rfid = "rfid" in flask.request.form.keys()
-        username = flask.request.form["name"]
-        usertype = flask.request.form["type"]
-        if usertype == "teacher" or usertype == "admin":
-            mail = flask.request.form["mail"]
-            password = flask.request.form["password"]
-            if password == "" or mail == "":
-                return "response: 235"
-    except Exception as e:
-        with open("addStudent/response/error.html", "r") as file:
-            return file.read()
-    #TODO: addStudent user to database
-    if rfid:
-        with open("addStudent/response/successCard.html", "r") as file:
-            return file.read()
-    else:
-        with open("addStudent/response/successNoCard.html", "r") as file:
-            return file.read().replace("{user}", username)
 
 
 if __name__ == "__main__":
