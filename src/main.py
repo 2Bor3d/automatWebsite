@@ -62,7 +62,6 @@ def styles():
 def page():
     if checkAuth(flask.request.cookies.get("auth")):
         position = logedin[flask.request.cookies.get("auth")]["position"];
-        print(position)
         with open(f"{position}/index.html", "r") as file:
             return file.read();
     else:
@@ -276,6 +275,11 @@ def change_user():
                 if logedin[flask.request.cookies.get("auth")]["admin"]:
                     data[i]["name"] = changes["name"];
                 data[i]["time"] = changes["balance"];
+
+                if changes["date"] is not None:
+                    if changes["attendance"] == "present":
+                        data[i]["attended"] \
+                            .append([int(changes["date"]) - 946684800]);
         r = requests.post(IP + "/change_user", json=data);
     return "fail"
 
@@ -357,7 +361,6 @@ def delete_course():
             r = requests.post(IP + "/change_course", json=courses);
             return "success";
     return "fail";
-
 
 
 def inRange(fromm, to, x):

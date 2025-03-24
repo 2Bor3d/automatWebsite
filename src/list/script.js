@@ -15,15 +15,16 @@ function save(id) {
 	name = document.getElementById("name").value;
 	balance = document.getElementById("balance").value;
 
-    date = document.getElementById("attendenceDate");
-    attendence = document.getElementById("attendence");
+    attendanceDate = document.getElementById("attendanceDate").value;
+    date = Math.floor(new Date(attendanceDate).getTime()/1000);
+    attendance = document.getElementById("attendance").value;
 
 	send("/change_user",
 		{ "id": id,
           "name": name,
           "balance": balance,
           "date": date,
-          "attendence": attendence });
+          "attendance": attendance });
     closePopup();
     location.reload();
 }
