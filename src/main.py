@@ -60,6 +60,7 @@ def styles():
 def page():
     if checkAuth(flask.request.cookies.get("auth")):
         position = logedin[flask.request.cookies.get("auth")]["position"];
+        print(position)
         with open(f"{position}/index.html", "r") as file:
             return file.read();
     else:
@@ -138,7 +139,6 @@ def username():
 @app.route("/move", methods=["POST"])
 def move():
     if checkAuth(flask.request.cookies.get("auth")):
-        print(flask.request.get_json())
         logedin[flask.request.cookies.get("auth")]["position"] = \
             flask.request.get_json()["position"];
         logedin[flask.request.cookies.get("auth")]["sub"] = \
@@ -194,15 +194,63 @@ def courses():
     return flask.make_response("authorisation failed"), 401
 
 
-# @app.route("/student", methods=["POST"]) #TODO: remove if no use is found
-def student():
+@app.route("/add_user", methods=["POST"])
+def add_user():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/students?course=forschen");
-        print(r)
-        print(r.text)
-        print(json.loads(r.text))
-    else:
-        return flask.make_response("authorisation failed"), 401
+        if logedin[flask.request.cookies.get("auth")]:
+            new = dict(flask.request.form);
+
+            number = None;
+            if new["rfid"] == "on":
+                r = requests.get(IP + "/data");
+                data = json.loads(r.text)["people"];
+
+                number = 0;
+                for person in data:
+                    if person["number"] >= number:
+                        number = person["number"] + 1;
+
+                r = requests.post(IP + "/scan");
+                rfid = r.text;
+
+                card_type = {"admin": 0, "teacher": 1, "student": 2}[new["type"]];
+
+                person = {"number": number,
+                          "name": new["name"],
+                          "type": card_type,
+                          "rfid": rfid,
+                          "attended": [],
+                          "since": None,
+                          "time": 0}
+                data.append(person);
+
+                r = requests.post(IP + "/change_user", json=data);
+
+            if new["type"] != "student":
+                r = requests.get(IP + "/users");
+                users = json.loads(r.text);
+
+                user_id = 0
+                for user in users:
+                    if user["id"] >= user_id:
+                        user_id = user["id"] + 1
+
+                admin = {"teacher": True, "admin": False}[new["type"]];
+
+                user = {"id": user_id,
+                        "username": new["mail"],
+                        "password": new["password"],
+                        "admin": admin,
+                        "number": number}
+                users.append(user);
+                r = requests.post(IP + "/change_user_file", json=users);
+
+                user = {};
+            with open("addStudent/response/successNoCard.html", "r") as file:
+                return file.read().replace("{user}", new["name"]);
+
+    with open("addStudent/response/error.html", "r") as file:
+        return file.read();
 
 
 @app.route("/change_user", methods=["POST"])
@@ -363,25 +411,6 @@ def add_user():
     else:
         with open("addStudent/response/successNoCard.html", "r") as file:
             return file.read().replace("{user}", username)
-
-
-@app.route("/add_user", methods=["POST"])
-def add_user():  # davids version
-    print(flask.request.form)
-
-
-# @app.route("/add_course", methods=["POST"])
-def add_course():
-    try:
-        name = flask.request.form["name"]
-        day = flask.request.form["day"]
-        lehrer = flask.request.form["lehrer"]
-    except Exception as e:
-        with open("addCourse/response/error.html", "r") as file:
-            return file.read()
-    #TODO: add course to database
-    with open("addCourse/response/success.html" , "r") as file:
-        return file.read().__str__().replace("{kurs}", name).replace("{day}", day).replace("{lehrer}", lehrer)
 
 
 if __name__ == "__main__":

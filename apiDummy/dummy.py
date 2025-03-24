@@ -1,5 +1,6 @@
 import flask;
 import json;
+import time;
 
 app = flask.Flask(__name__);
 
@@ -85,6 +86,20 @@ def change_user():
         json.dump({"people": flask.request.json}, write)
         return "success"
     return "fail"
+
+
+@app.route("/change_user_file", methods=["POST"])
+def change_user_file():
+    with open("user.json", "w") as write:
+        json.dump(flask.request.json, write)
+        return "success"
+    return "fail"
+
+
+@app.route("/scan", methods=["POST"])
+def scan():
+    time.sleep(6.8);
+    return [147, 110, 216, 245, 208];
 
 
 if __name__ == "__main__":
