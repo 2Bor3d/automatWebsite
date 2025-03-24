@@ -112,7 +112,7 @@ def login():
                                      "admin": user["admin"],
                                      "courses": courses_user,
                                      "position": "list",
-                                     "sub": {}};
+                                     "sub": {"course": ""}};
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -162,8 +162,7 @@ def entrys(raw=False):
             courses = json.loads(r.text);
             students = set({});
             print(user)
-            print("--")
-            if user["sub"] == {}:
+            if user["sub"] == {} or user["sub"]["course"] == "":
                 for cours in user["courses"]:
                     students = students.union(set(courses[cours]["students"]));
             else:
