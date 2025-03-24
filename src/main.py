@@ -311,7 +311,6 @@ def delete_course():
     return "fail";
 
 
-
 def inRange(fromm, to, x):
     if fromm == '':
         fromm = "0000-00-00";
@@ -341,6 +340,10 @@ def inRange(fromm, to, x):
     return True
 
 
+# sends a csv file with attendance data specified in the form
+# from -> form.from
+# to -> form.to
+# course -> form.course
 @app.route("/csv", methods=["POST"])
 def csv():  # TODO: use exact course -> Ben
     fromm = flask.request.form["from"]
@@ -350,9 +353,11 @@ def csv():  # TODO: use exact course -> Ben
     file_path = "students.csv"
     if os.path.exists(file_path):
         os.remove(file_path)
+
     days = set()
     users = []
     data = entrys(True)
+    # filter data
     for entry in data:
         users.append({"key": int(entry["id"]), "value": entry})
         for day in entry["attendance"]:
@@ -361,8 +366,10 @@ def csv():  # TODO: use exact course -> Ben
                     continue;
                 days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
 
+    # sort data
     users.sort(key=lambda x: x["key"])
 
+    # write data
     with open('./students.csv', 'a', newline='') as csvfile:
         writer = csvBib.writer(csvfile, delimiter=';')
         header = ['Index', 'Name']
@@ -392,7 +399,7 @@ def csv():  # TODO: use exact course -> Ben
 # @app.route("/add_user", methods=["POST"])
 def add_user():
     try:
-        rfid =  "rfid" in flask.request.form.keys()
+        rfid = "rfid" in flask.request.form.keys()
         username = flask.request.form["name"]
         usertype = flask.request.form["type"]
         if usertype == "teacher" or usertype == "admin":
@@ -403,7 +410,7 @@ def add_user():
     except Exception as e:
         with open("addStudent/response/error.html", "r") as file:
             return file.read()
-    #TODO: addStudent user to database
+    # TODO: addStudent user to database
     if rfid:
         with open("addStudent/response/successCard.html", "r") as file:
             return file.read()
