@@ -16,7 +16,9 @@ app = flask.Flask(__name__);
 logedin = {};
 
 IP = "http://127.0.0.1:5000";
-#IP = "http://192.168.4.1";
+
+
+# IP = "http://192.168.4.1";
 
 
 def checkAuth(auth: str) -> bool:
@@ -48,6 +50,7 @@ def script():
         with open("login/script.js", "r") as file:
             return file.read();
 
+
 @app.route("/styles.css")
 def styles():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -77,6 +80,7 @@ def pageJs():
     else:
         return flask.make_response("authorisation failed"), 401
 
+
 @app.route("/page/styles.css")
 def pageCss():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -105,7 +109,8 @@ def login():
                     courses_user.append(course);
             random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
             ############################################# fails 1/1431655765 times
-            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": courses_user, "position": "list", "sub": {}};
+            logedin[random_bytes] = {"username": user["username"], "admin": user["admin"], "courses": courses_user,
+                                     "position": "list", "sub": {}};
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -116,7 +121,7 @@ def login():
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
         return logedin[flask.request.cookies.get("auth")];
-        #return {"username": "Reinhardt", "admin": True,
+        # return {"username": "Reinhardt", "admin": True,
         #        "courses": ["Technik", "Informatik"]};
     else:
         return flask.make_response("authorisation failed"), 401
@@ -173,7 +178,8 @@ def entrys(raw=False):
                 new.append({
                     "id": entry["number"],
                     "name": entry["name"],
-                    "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime('%Y-%m-%d') if len(entry["attended"])>0 else "None",
+                    "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime(
+                        '%Y-%m-%d') if len(entry["attended"]) > 0 else "None",
                     "balance": entry["time"]});
         return new;
     else:
@@ -198,6 +204,7 @@ def student():
         print(json.loads(r.text))
     else:
         return flask.make_response("authorisation failed"), 401
+
 
 @app.route("/change_user", methods=["POST"])
 def change_user():
@@ -236,8 +243,9 @@ def change_course():
             print(r.text)
     return "unknown response"
 
+
 def inRange(fromm, to, x):
-    if fromm== '':
+    if fromm == '':
         fromm = "0000-00-00";
     if to == '':
         to = "9999-99-99";
@@ -264,8 +272,9 @@ def inRange(fromm, to, x):
 
     return True
 
+
 @app.route("/csv", methods=["POST"])
-def csv():#TODO: use exact course and date -> Ben
+def csv():  # TODO: use exact course -> Ben
     fromm = flask.request.form["from"]
     to = flask.request.form["to"]
     course = flask.request.form["course"]
@@ -277,10 +286,10 @@ def csv():#TODO: use exact course and date -> Ben
     users = []
     data = entrys(True)
     for entry in data:
-        users.append({"key": int(entry["id"]),"value": entry})
+        users.append({"key": int(entry["id"]), "value": entry})
         for day in entry["attendance"]:
             for x in day:
-                if not inRange(fromm, to,datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
+                if not inRange(fromm, to, datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
                     continue;
                 days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
 
@@ -298,7 +307,7 @@ def csv():#TODO: use exact course and date -> Ben
             data = set()
             for day in user["value"]['attendance']:
                 for x in day:
-                    if not inRange(fromm, to,datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
+                    if not inRange(fromm, to, datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
                         continue;
                     data.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
             line = (str(user["key"]), user["value"]['name'])
@@ -311,10 +320,11 @@ def csv():#TODO: use exact course and date -> Ben
 
     return send_file("students.csv", as_attachment=True)
 
+
 @app.route("/add_user", methods=["POST"])
 def add_user():
     try:
-        rfid =  "rfid" in flask.request.form.keys()
+        rfid = "rfid" in flask.request.form.keys()
         username = flask.request.form["name"]
         usertype = flask.request.form["type"]
         if usertype == "teacher" or usertype == "admin":
@@ -325,13 +335,14 @@ def add_user():
     except Exception as e:
         with open("addStudent/response/error.html", "r") as file:
             return file.read()
-    #TODO: addStudent user to database
+    # TODO: addStudent user to database
     if rfid:
         with open("addStudent/response/successCard.html", "r") as file:
             return file.read()
     else:
         with open("addStudent/response/successNoCard.html", "r") as file:
             return file.read().replace("{user}", username)
+
 
 @app.route("/add_course", methods=["POST"])
 def add_course():
@@ -342,13 +353,16 @@ def add_course():
     except Exception as e:
         with open("addCourse/response/error.html", "r") as file:
             return file.read()
-    #TODO: add course to database
-    with open("addCourse/response/success.html" , "r") as file:
+    # TODO: add course to database
+    with open("addCourse/response/success.html", "r") as file:
         return file.read().__str__().replace("{kurs}", name).replace("{day}", day).replace("{lehrer}", lehrer)
+
 
 @app.route("/getTeachers", methods=["GET"])
 def get_teachers():
-    #TODO: load teachers
+    # TODO: load teachers
     return {"teachers": ["Sabine Reinhardt", "Jost"], "admin": ["Ben Schnorrenberger"]}
+
+
 if __name__ == "__main__":
     app.run(port=8080)
