@@ -20,10 +20,7 @@ IP = "http://127.0.0.1:5000";
 
 
 def checkAuth(auth: str) -> bool:
-    print(auth)
-    print(logedin)
     if auth in logedin:
-        print("success");
         return True;
     return False;
 
@@ -118,8 +115,6 @@ def login():
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
         return logedin[flask.request.cookies.get("auth")];
-        #return {"username": "Reinhardt", "admin": True, 
-        #        "courses": ["Technik", "Informatik"]};
     else:
         return flask.make_response("authorisation failed"), 401
 
@@ -183,7 +178,7 @@ def courses():
     return flask.make_response("authorisation failed"), 401
 
 
-@app.route("/student", methods=["POST"])
+# @app.route("/student", methods=["POST"]) #TODO: remove if no use is found
 def student():
     if checkAuth(flask.request.cookies.get("auth")):
         r = requests.get(IP + "/students?course=forschen");
@@ -200,18 +195,13 @@ def change_user():
         r = requests.get(IP + "/data");
         data = json.loads(r.text)["people"];
         changes = flask.request.get_json();
-        print(data)
-        print(changes)
         for i in range(len(data)):
             if data[i]["number"] == int(changes["id"]):
                 if logedin[flask.request.cookies.get("auth")]["admin"]:
                     data[i]["name"] = changes["name"];
                 data[i]["time"] = changes["balance"];
-        print("---")
-        print(data)
         r = requests.post(IP + "/change_user", json=data);
-        print(r.text)
-    return "unknown response"
+    return "fail"
 
 
 @app.route("/delete_user", methods=["POST"])
@@ -232,6 +222,32 @@ def delete_user():
     return "fail"
 
 
+@app.route("/get_users", methods=["POST"])
+def get_users():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            r = requests.get(IP + "/users");
+            users = json.loads(r.text);
+            return users;
+    return "fail";
+
+
+@app.route("/add_course", methods=["POST"])
+def add_course():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            r = requests.get(IP + "/courses");
+            courses = json.loads(r.text);
+            changes = dict(flask.request.form)
+
+            courses[changes["name"]] = {"day": int(changes["day"]),
+                                        "students": [],
+                                        "users": [int(changes["user"])]}
+            r = requests.post(IP + "/change_course", json=courses);
+            return "success";
+    return "fail";
+
+
 @app.route("/change_course", methods=["POST"])
 def change_course():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -245,9 +261,26 @@ def change_course():
             courses[changes["name"]]["students"] = [];
             for student in changes["students"].split(","):
                 courses[changes["name"]]["students"].append(int(student));
+            courses[changes["name"]]["users"] = [];
+            for user in changes["users"].split(","):
+                courses[changes["name"]]["users"].append(int(user));
             r = requests.post(IP + "/change_course", json=courses);
-            print(r.text)
-    return "unknown response"
+    return "fail"
+
+
+@app.route("/delete_course", methods=["POST"])
+def delete_course():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            r = requests.get(IP + "/courses");
+            courses = json.loads(r.text);
+            course = flask.request.get_json()["id"];
+
+            courses.pop(course);
+
+            r = requests.post(IP + "/change_course", json=courses);
+            return "success";
+    return "fail";
 
 
 @app.route("/csv")#, methods=["POST"])
@@ -321,7 +354,7 @@ def add_user():  # davids version
     print(flask.request.form)
 
 
-@app.route("/add_course", methods=["POST"])
+# @app.route("/add_course", methods=["POST"])
 def add_course():
     try:
         name = flask.request.form["name"]
@@ -333,12 +366,6 @@ def add_course():
     #TODO: add course to database
     with open("addCourse/response/success.html" , "r") as file:
         return file.read().__str__().replace("{kurs}", name).replace("{day}", day).replace("{lehrer}", lehrer)
-
-
-@app.route("/getTeachers", methods=["GET"])
-def get_teachers():
-    #TODO: load teachers
-    return {"teachers": ["Sabine Reinhardt", "Jost"], "admin": ["Ben Schnorrenberger"]}
 
 
 if __name__ == "__main__":

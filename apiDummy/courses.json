@@ -1,1 +1,1 @@
-{"Physik": {"day": 3, "students": [4, 5, 6], "users": [2, 3]}, "Technik": {"day": 3, "students": [1, 2, 3], "users": [1, 2]}, "Informatik": {"day": "4", "students": [4, 5, 6, 7, 8], "users": [1]}}
+{"Informatik": {"day": 4, "students": [4, 5, 6], "users": [1]}, "Physik": {"day": "3", "students": [4, 5, 6], "users": [1, 2, 3]}, "Technik": {"day": 3, "students": [1, 2, 3], "users": [1, 2]}}
