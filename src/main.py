@@ -267,10 +267,8 @@ def inRange(fromm, to, x):
 
     return True
 
-
 @app.route("/csv", methods=["POST"])
 def csv():#TODO: use exact course and date -> Ben
-    print("Hellooooooo")
     print(flask.request.form.to_dict())
     fromm = flask.request.form["from"]
     to = flask.request.form["to"]
