@@ -35,7 +35,8 @@ function deleteUser(id) {
 	}
 }
 
-function popup(id) {
+async function popup(id) {
+    username = await (await fetch("/username", {method: "POST",})).json();
 	fetch("/entrys", {
 		method: "POST",
 	}).then((response) => {
@@ -56,6 +57,11 @@ function popup(id) {
 						.setAttribute("onclick", `save('${id}')`);
 					document.getElementById("delete")
 						.setAttribute("onclick", `deleteUser('${id}')`);
+                    
+                    if (username["admin"]) {
+                        document.getElementById("name").removeAttribute("disabled");
+                        document.getElementById("delete").removeAttribute("disabled");
+                    }
 				}
 			});
 		});

@@ -92,6 +92,7 @@ def login():
     attempt = flask.request.get_json();
     r = requests.get(IP + "/users");
     users = json.loads(r.text);
+    print(users)
 
     r = requests.get(IP + "/courses");
     courses_file = json.loads(r.text);
@@ -270,10 +271,11 @@ def csv():
 
     return send_file("students.csv", as_attachment=True)
 
-@app.route("/add_user", methods=["POST"])
+
+# @app.route("/add_user", methods=["POST"])
 def add_user():
     try:
-        rfid =  "rfid" in flask.request.form.keys()
+        rfid = "rfid" in flask.request.form.keys()
         username = flask.request.form["name"]
         usertype = flask.request.form["type"]
         if usertype == "teacher" or usertype == "admin":
@@ -292,6 +294,12 @@ def add_user():
         with open("addStudent/response/successNoCard.html", "r") as file:
             return file.read().replace("{user}", username)
 
+
+@app.route("/add_user", methods=["POST"])
+def add_user():  # davids version
+    print(flask.request.form)
+
+
 @app.route("/add_course", methods=["POST"])
 def add_course():
     try:
@@ -305,9 +313,12 @@ def add_course():
     with open("addCourse/response/success.html" , "r") as file:
         return file.read().__str__().replace("{kurs}", name).replace("{day}", day).replace("{lehrer}", lehrer)
 
+
 @app.route("/getTeachers", methods=["GET"])
 def get_teachers():
     #TODO: load teachers
     return {"teachers": ["Sabine Reinhardt", "Jost"], "admin": ["Ben Schnorrenberger"]}
+
+
 if __name__ == "__main__":
     app.run(port=8080)

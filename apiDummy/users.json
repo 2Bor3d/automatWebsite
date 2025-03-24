@@ -1,0 +1,16 @@
+[
+        {
+                "id": 1,
+                "username": "david.glaenzel@gmail.com",
+                "password": "123",
+                "groups": ["forschen"],
+                "admin": true
+        },
+        {
+                "id": 2,
+                "username": "01bensch@gmail.com",
+                "password": "1234",
+                "groups": ["forschen", "biologie"],
+                "admin": false
+        }
+]

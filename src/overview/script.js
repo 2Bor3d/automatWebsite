@@ -42,7 +42,7 @@ function popup(id) {
 					document.getElementById("day").value = json[value]["day"];
 					document.getElementById("students").value = 
                         json[value]["students"];
-                    document.getElementById("users").vlaue = 
+                    document.getElementById("users").value = 
                         json[value]["users"];
 
 					document.getElementById("close")

@@ -55,15 +55,8 @@ def mint():
 
 @app.route("/users", methods=["GET"])
 def users():
-    return [
-    {
-        "id": 1,
-        "username": "david.glaenzel@gmail.com",
-        "password": "12345",
-        "groups": ["forschen"],
-        "admin": True
-    }
-    ];
+    with open("users.json", "r") as read:
+        return json.load(read);
 
 
 @app.route("/data", methods=["GET"])
@@ -74,11 +67,24 @@ def data():
 
 @app.route("/courses", methods=["GET"])
 def courses():
-    return {
-            "Technik": {"day": 3, "people": [1, 2, 3], "users": [1, 2]}, 
-            "Informatik": {"day": 4, "people": [4, 5, 6], "users": [1]}, 
-            "Physik": {"day": 3, "people": [4, 5, 6], "users": [2, 3]}
-            }
+    with open("courses.json", "r") as read:
+        return json.load(read);
+
+
+@app.route("/change_course", methods=["POST"])
+def change_courses():
+    with open("courses.json", "w") as write:
+        json.dump(flask.request.json, write)
+        return "success"
+    return "fail"
+
+
+@app.route("/change_user", methods=["POST"])
+def change_user():
+    with open("data.json", "w") as write:
+        json.dump({"people": flask.request.json}, write)
+        return "success"
+    return "fail"
 
 
 if __name__ == "__main__":
