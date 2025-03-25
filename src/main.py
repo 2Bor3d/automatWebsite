@@ -15,8 +15,8 @@ app = flask.Flask(__name__);
 
 logedin = {};
 
-#IP = "http://127.0.0.1:5000";
-IP = "http://192.168.4.1";
+IP = "http://127.0.0.1:5000";
+#IP = "http://192.168.4.1";
 
 
 def checkAuth(auth: str) -> bool:
