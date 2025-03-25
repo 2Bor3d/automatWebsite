@@ -37,6 +37,23 @@
 	border-right: none;
 }
 
+#search {
+	width: 30%;
+	height: 30%;
+	padding-left: 7px;
+	margin-bottom: 10px;
+	border-radius: 10px;
+}
+
+#searchbutton {
+	border-radius: 10px;
+	background-color: #92cc4f;
+}
+
+#searchbutton:hover {
+	background-color: #73a834;
+}
+
 /* david beispiel code: */
 
 .dropdown {

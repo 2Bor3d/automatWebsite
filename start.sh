@@ -1,2 +1,3 @@
 python3.12 apiDummy/dummy.py &
-python3.12 src/main.py &
+cd src/
+python3.12 main.py
