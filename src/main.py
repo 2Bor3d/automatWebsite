@@ -127,7 +127,7 @@ def username():
 
         courses_user = [];
         for course in courses_file.keys():
-            if logedin[flask.request.cookies.get("auth")] \
+            if logedin[flask.request.cookies.get("auth")]["id"] \
                     in courses_file[course]["users"]:
                 courses_user.append(course);
 
@@ -155,7 +155,6 @@ def entrys(raw=False):
     if checkAuth(flask.request.cookies.get("auth")):
         r = requests.get(IP + "/data");
         entrys = json.loads(r.text)["people"];
-        print(entrys)
 
         user = logedin[flask.request.cookies.get("auth")];
         if not user["admin"] or \
@@ -204,7 +203,6 @@ def entrys(raw=False):
                     "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime(
                         '%Y-%m-%d') if len(entry["attended"]) > 0 else "None",
                     "balance": entry["time"]});
-        print(new)
         return new;
     else:
         return flask.make_response("authorisation failed"), 401
