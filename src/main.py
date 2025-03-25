@@ -392,6 +392,10 @@ def inRange(fromm, to, x):
     return True
 
 
+# sends a csv file with attendance data specified in the form
+# from -> form.from
+# to -> form.to
+# course -> form.course
 @app.route("/csv", methods=["POST"])
 def csv():  # TODO: use exact course -> Ben
     fromm = flask.request.form["from"]
@@ -401,9 +405,11 @@ def csv():  # TODO: use exact course -> Ben
     file_path = "students.csv"
     if os.path.exists(file_path):
         os.remove(file_path)
+
     days = set()
     users = []
     data = entrys(True)
+    # filter data
     for entry in data:
         users.append({"key": int(entry["id"]), "value": entry})
         for day in entry["attendance"]:
@@ -412,8 +418,10 @@ def csv():  # TODO: use exact course -> Ben
                     continue;
                 days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
 
+    # sort data
     users.sort(key=lambda x: x["key"])
 
+    # write data
     with open('./students.csv', 'a', newline='') as csvfile:
         writer = csvBib.writer(csvfile, delimiter=';')
         header = ['Index', 'Name']
@@ -438,6 +446,48 @@ def csv():  # TODO: use exact course -> Ben
             writer.writerow(line)
 
     return send_file("students.csv", as_attachment=True)
+
+
+# @app.route("/add_user", methods=["POST"])
+def add_user():
+    try:
+        rfid = "rfid" in flask.request.form.keys()
+        username = flask.request.form["name"]
+        usertype = flask.request.form["type"]
+        if usertype == "teacher" or usertype == "admin":
+            mail = flask.request.form["mail"]
+            password = flask.request.form["password"]
+            if password == "" or mail == "":
+                return "response: 235"
+    except Exception as e:
+        with open("addStudent/response/error.html", "r") as file:
+            return file.read()
+    # TODO: addStudent user to database
+    if rfid:
+        with open("addStudent/response/successCard.html", "r") as file:
+            return file.read()
+    else:
+        with open("addStudent/response/successNoCard.html", "r") as file:
+            return file.read().replace("{user}", username)
+
+
+@app.route("/add_user", methods=["POST"])
+def add_user():  # davids version
+    print(flask.request.form)
+
+
+# @app.route("/add_course", methods=["POST"])
+def add_course():
+    try:
+        name = flask.request.form["name"]
+        day = flask.request.form["day"]
+        lehrer = flask.request.form["lehrer"]
+    except Exception as e:
+        with open("addCourse/response/error.html", "r") as file:
+            return file.read()
+    # TODO: add course to database
+    with open("addCourse/response/success.html", "r") as file:
+        return file.read().__str__().replace("{kurs}", name).replace("{day}", day).replace("{lehrer}", lehrer)
 
 
 if __name__ == "__main__":
