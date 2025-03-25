@@ -7,6 +7,29 @@ async function send(address, dict) {
 	return await response.json();
 }
 
+function move(pos, sub) {
+	fetch("move", {
+		method: "POST",
+		body: JSON.stringify({
+			position: pos,
+			sub: sub
+        }),
+		headers: { "content-type": "application/json; charset=UTF-8", }
+	}).then(
+		() => {
+			document.location.reload();
+		});
+	console.log("moving to: " + pos);
+}
+
+async function search() {
+    term = document.getElementById("search").value;
+    username = await (await fetch("/username", {method: "POST",})).json();
+    console.log(username["sub"])
+    username["sub"]["term"] = term;
+    move(username["position"], username["sub"]);
+}
+
 function closePopup() {
 	document.getElementById("popup").classList.add("hidden");
 }

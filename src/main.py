@@ -112,7 +112,7 @@ def login():
                                      "admin": user["admin"],
                                      "courses": courses_user,
                                      "position": "list",
-                                     "sub": {}};
+                                     "sub": {"course": ""}};
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -157,13 +157,13 @@ def entrys(raw=False):
         entrys = json.loads(r.text)["people"];
 
         user = logedin[flask.request.cookies.get("auth")];
-        if not user["admin"] or user["sub"] != {}:
+        if not user["admin"] or \
+                (user["sub"] != {} and user["sub"]["course"] != ""):
             r = requests.get(IP + "/courses");
             courses = json.loads(r.text);
             students = set({});
             print(user)
-            print("--")
-            if user["sub"] == {}:
+            if user["sub"] == {} or user["sub"]["course"] == "":
                 for cours in user["courses"]:
                     students = students.union(set(courses[cours]["students"]));
             else:
@@ -172,6 +172,18 @@ def entrys(raw=False):
             cleaned = [];
             for entry in entrys:
                 if entry["number"] in students:
+                    cleaned.append(entry);
+            entrys = cleaned;
+
+        if user["sub"] != {} and \
+                "term" in user["sub"] and \
+                user["sub"]["term"] != "":
+
+            term = user["sub"]["term"].lower();
+            cleaned = [];
+            for entry in entrys:
+                if term in str(entry["number"]).lower() or \
+                        term in entry["name"].lower():
                     cleaned.append(entry);
             entrys = cleaned;
 
@@ -191,6 +203,7 @@ def entrys(raw=False):
                     "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime(
                         '%Y-%m-%d') if len(entry["attended"]) > 0 else "None",
                     "balance": entry["time"]});
+        print(new)
         return new;
     else:
         return flask.make_response("authorisation failed"), 401
