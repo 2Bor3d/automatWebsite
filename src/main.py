@@ -224,7 +224,8 @@ def add_user():
             new = dict(flask.request.form);
 
             number = None;
-            if new["rfid"] == "on":
+            if "rfid" in new.keys():#.new["rfid"] == "on":
+                print("RFID")
                 r = requests.get(IP + "/data");
                 data = json.loads(r.text)["people"];
 

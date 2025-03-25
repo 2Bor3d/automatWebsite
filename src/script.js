@@ -52,7 +52,8 @@ function move(pos, sub) {
 		headers: { "content-type": "application/json; charset=UTF-8", }
 	}).then(
 		() => {
-			document.getElementById("iframe").contentWindow.location.reload();
+			window.location.reload(window.location.href);
+			//document.getElementById("iframe").contentWindow.location.reload();
 		});
 	console.log("moving to: " + pos);
 }
