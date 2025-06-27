@@ -27,10 +27,10 @@ function load() {
         response.json().then((json) => {
             let opt;
             console.log(json);
-            Object.keys(json).forEach((t) => {
+            json["courses"].forEach((t) => {
                 opt = document.createElement('option');
-                opt.value = t;
-                opt.text = t;
+                opt.value = t["id"];
+                opt.text = t["name"];
                 document.getElementById("courses").appendChild(opt);
             })
         })

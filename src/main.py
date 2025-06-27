@@ -10,12 +10,13 @@ import collections
 from datetime import datetime;
 
 from flask import send_file
+import bcrypt
 
 app = flask.Flask(__name__);
 
 logedin = {};
 
-IP = "http://127.0.0.1:5000";
+IP = "http://127.0.0.1:8000";
 #IP = "http://192.168.4.1";
 
 
@@ -89,28 +90,32 @@ def pageCss():
 @app.route("/login", methods=["POST"])
 def login():
     attempt = flask.request.get_json();
-    r = requests.get(IP + "/users");
-    users = json.loads(r.text);
+    r = requests.get(IP + "/allTeachers");
+    users = json.loads(r.text)["teachers"];
     print(users)
 
-    r = requests.get(IP + "/courses");
-    courses_file = json.loads(r.text);
+    r = requests.get(IP + "/allCourses");
+    courses_file = json.loads(r.text)["courses"];
+    print(courses_file);
 
     response = flask.make_response("wrong username or password", 401)
     for user in users:
-        if user["username"] == attempt["username"] and user["password"] == attempt["password"]:
+        #if user["mail"] == attempt["username"] and bcrypt.checkpw(attempt["password"].encode('utf-8'), bytes(user["password"], "utf-8")): ### fix as soon as ben fixed
+        if user["mail"] == attempt["username"] and "123" == attempt["password"]:
             courses_user = [];
-            for course in courses_file.keys():
-                if user["id"] in courses_file[course]["users"]:
+            for course in courses_file:
+                if user in course["tutor"]:
                     courses_user.append(course);
             random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
             ############################################# fails 1/1431655765 times
+            print("----------")
             logedin[random_bytes] = {"id": user["id"],
-                                     "username": user["username"],
-                                     "admin": user["admin"],
+                                     "username": user["mail"],
+                                     "admin": True if user["level"] == "ADMIN" else False,
                                      "courses": courses_user,
                                      "position": "list",
                                      "sub": {"course": ""}};
+            print(logedin)
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -120,14 +125,17 @@ def login():
 @app.route("/username", methods=["POST"])
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/courses");
-        courses_file = json.loads(r.text);
+        r = requests.get(IP + "/allCourses");
+        courses_file = json.loads(r.text)["courses"];
 
-        courses_user = [];
-        for course in courses_file.keys():
-            if logedin[flask.request.cookies.get("auth")]["id"] \
-                    in courses_file[course]["users"]:
-                courses_user.append(course);
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            courses_user = courses_file;
+        else:
+            courses_user = [];
+            for course in courses_file:
+                if logedin[flask.request.cookies.get("auth")]["id"] \
+                        in course["tutor"]:
+                    courses_user.append(course);
 
         logedin[flask.request.cookies.get("auth")]["courses"] = courses_user;
 
@@ -151,8 +159,9 @@ def move():
 @app.route("/entrys", methods=["POST"])
 def entrys(raw=False):
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/data");
-        entrys = json.loads(r.text)["people"];
+        r = requests.get(IP + "/allStudents");
+        print(r.text)
+        entrys = json.loads(r.text)["students"];
 
         user = logedin[flask.request.cookies.get("auth")];
         if not user["admin"] or \
@@ -195,12 +204,18 @@ def entrys(raw=False):
                     "balance": entry["time"]
                 });
             else:
+                if entry["attended"][-1][1] - entry["attended"][-1][0] < 7200 and entry["attended"][-1][1] - entry["attended"][-1][0] != 0:
+                    warning = True;
+                else:
+                    warning = False;
+                print(entry["attended"][-1][1] - entry["attended"][-1][0])
                 new.append({
                     "id": entry["number"],
                     "name": entry["name"],
                     "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime(
                         '%Y-%m-%d') if len(entry["attended"]) > 0 else "None",
-                    "balance": entry["time"]});
+                    "balance": entry["time"],
+                    "warning": warning});
         return new;
     else:
         return flask.make_response("authorisation failed"), 401
@@ -210,7 +225,7 @@ def entrys(raw=False):
 def courses():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = requests.get(IP + "/courses");
+            r = requests.get(IP + "/allCourses");
             return r.text;
     return flask.make_response("authorisation failed"), 401
 
@@ -225,12 +240,6 @@ def add_user():
             if "rfid" in new.keys():
                 print("RFID")
                 r = requests.get(IP + "/data");
-                data = json.loads(r.text)["people"];
-
-                number = 0;
-                for person in data:
-                    if person["number"] >= number:
-                        number = person["number"] + 1;
 
                 r = requests.post(IP + "/scan");
                 rfid = r.text;
@@ -244,9 +253,8 @@ def add_user():
                           "attended": [],
                           "since": None,
                           "time": 0}
-                data.append(person);
 
-                r = requests.post(IP + "/change_user", json=data);
+                r = requests.post(IP + "/addStudent", json=person);
 
             if new["type"] != "student":
                 r = requests.get(IP + "/users");
@@ -320,8 +328,8 @@ def delete_user():
 def get_users():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = requests.get(IP + "/users");
-            users = json.loads(r.text);
+            r = requests.get(IP + "/allTeachers");
+            users = json.loads(r.text)["teachers"];
             return users;
     return "fail";
 
@@ -330,14 +338,13 @@ def get_users():
 def add_course():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = requests.get(IP + "/courses");
-            courses = json.loads(r.text);
-            changes = dict(flask.request.form)
+            changes = dict(flask.request.form);
+            print(changes)
+            course = {"name": changes["name"],
+                      "day": changes["day"],
+                      "tutor": [changes["user"]]}
 
-            courses[changes["name"]] = {"day": int(changes["day"]),
-                                        "students": [],
-                                        "users": [int(changes["user"])]}
-            r = requests.post(IP + "/change_course", json=courses);
+            r = requests.post(IP + "/addCourse", json=course);
             return "success";
     return "fail";
 
@@ -411,7 +418,7 @@ def inRange(fromm, to, x):
 # to -> form.to
 # course -> form.course
 @app.route("/csv", methods=["POST"])
-def csv():  # TODO: use exact course -> Ben
+def csv():# TODO: use exact course -> Ben
     fromm = flask.request.form["from"]
     to = flask.request.form["to"]
     course = flask.request.form["course"]

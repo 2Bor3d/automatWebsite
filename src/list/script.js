@@ -123,6 +123,10 @@ function load() {
 				button.innerText = "editieren";
 				punish_button.appendChild(button);
 				tr.appendChild(punish_button);
+
+                if (value.warning == true) {
+                    tr.classList.add("warning")
+                }
 			})
 		});
 	});

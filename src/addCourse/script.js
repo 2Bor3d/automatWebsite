@@ -28,11 +28,12 @@ function loadSite() {
         method: "POST"
     }).then((response) => {
         response.json().then((json) => {
+            console.log(json)
             list = document.getElementById("user");
             json.forEach((user) => {
                 opt = document.createElement("option");
                 opt.value = user["id"];
-                opt.text = user["username"];
+                opt.text = user["firstName"]+" "+user["lastName"];
                 list.appendChild(opt);
             });
         });

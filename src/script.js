@@ -9,9 +9,9 @@ function load() {
 			for (i = 0; i < json["courses"].length; i++) {
 				p = document.createElement("p");
 				p.setAttribute("onclick",
-					`move('list', '${json["courses"][i]}')`);
+					`move('list', '${json["courses"][i]["id"]}')`);
 				p.classList.add("clickable");
-				p.innerText = json["courses"][i]
+				p.innerText = json["courses"][i]["name"];
 				list.appendChild(p);
 			}
 			if (json["admin"] == true) {
