@@ -8,7 +8,7 @@
     height:fit-content;
 }
 
-#container label {
+label {
     display: block;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -38,16 +38,19 @@ input {
     background-color: #476920;
 }
 
-#rfid {
-    width: fit-content;
-    float: left;
-    color: #7aae3e;
-    margin-bottom: 0;
-    align-items: center;
+#leherer {
+    width: 100%;
+    margin-bottom: 10px;
 }
 
-#label_rfid {
-    width: fit-content;
-    padding: 0;
-    float: left;
+#leherer {
+    border-collapse: collapse;
 }
+#leherer option:hover {
+    background-color: #c4c1c1;
+}
+
+.hidden {
+    display: none;
+}
+

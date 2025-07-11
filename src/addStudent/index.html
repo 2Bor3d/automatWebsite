@@ -7,46 +7,53 @@
     <script src="/page/script.js"></script>
     <link rel="stylesheet" href="page/styles.css">
 </head>
-<body>
+<body onload="load()">
 <div id="container">
-    <form method="POST" action="/add_user" id="form">
-        <div class="field">
-            <label for="type">type: </label>
-            <select id="type" name="type" onchange="setVisibility(this.value)">
-                <option value="teacher">teacher</option>
-                <option value="student">student</option>
-                <option value="admin">admin</option>
-            </select>
+    <div id="form">
+        <label for="type" id="lType">Typ: </label>
+        <select id="type" name="type" onchange="change_type()">
+            <option value="STUDENT">Schüler*in</option>
+            <option value="TEACHER">Lehrkraft</option>
+            <option value="ADMIN">Administrator*in</option>
+        </select>
+        <label for="firstName" id="lFirstName">Vorname: </label>
+        <input id="firstName">
+        <label for="lastName" id="lLastName">Lastname: </label>
+        <input id="lastName">
+        
+        <label for="rfid" id="lRfid">Chipkarte: </label>
+        <div id="fixcheckbox">
+            <input id="rfid" name="rfid" type="checkbox">
         </div>
 
-        <div class="field">
-            <!--<label for="name">name: </label>-->
-            <input type="text" placeholder="Name..." id="name" name="name">
-        </div>
+        <label for="gender" id="lGender">Geschlechtsidentifikationstyp: </label>
+        <select id="gender" name="gender"></select>
 
-        <div class="field" id="div_mail">
-            <!--<label for="mail">Mail: </label>-->
-            <input type="text" placeholder="Mail..." id="mail" name="mail">
-        </div>
+        <label for="birthday" id="lBirthday">Geburtstag: </label>
+        <input id="birthday" type="date">
 
-        <div class="field" id="div_password">
-            <!--<label for="password" class="hidden">password:</label>-->
-            <input type="password" placeholder="Password..." id="password" class="hidden" name="password">
+        <div id="adress">
+            <p>Adresse:</p>
+            <label for="nr" id="lNr">Identifikationsnummer des Hauses: </label>
+            <input id="nr" type="number">
+            <label for="street" id="lStreet">Straße: </label>
+            <input id="street">
+            <label for="city" id="lCity">Stadt: </label>
+            <input id="city">
+            <label for="zip" id=lZip">Postleitzahl: </label>
+            <input id="zip" type="number">
+            <label for="country" id="lCountry">Land: </label>
+            <input id="country" value="Deutschland">
         </div>
-        <div class="field">
-            <label for="courses">courses</label>
-            <select id="courses" name="courses">
-                <option value="none">none</option>
-            </select>
-        </div>
+        
+        <label for="email" id="lEmail" class="admin hidden">E-Mail Adresse: </label>
+        <input id="email" name="email" class="admin hidden">
+        <label for"password" id="lPassword" class="admin hidden">Passwort: </label>
+        <input id="password" name="password" class="admin hidden" type="password">
 
-        <div class="field one-line">
-            <label for="rfid" id="label_rfid">add rfid card</label>
-            <input type="checkbox" id="rfid" checked name="rfid">
-        </div>
-        <button>OK</button>
-        <script>load()</script>
-    </form>
+        <input id="submit" type="button" value="Hinzufügen" onclick="submit()">
+        <p id="message">
+    </div>
 </div>
 </body>
 </html>

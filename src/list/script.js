@@ -61,7 +61,7 @@ function deleteUser(id) {
 
 async function popup(id) {
     username = await (await fetch("/username", {method: "POST",})).json();
-	fetch("/entrys", {
+	fetch("/all_students", {
 		method: "POST",
 	}).then((response) => {
 		response.json().then((json) => {
@@ -72,7 +72,9 @@ async function popup(id) {
 
                     document.getElementById("identification").innerText = "Id: " + student.id;
 
-					document.getElementById("name").value = student.name;
+					document.getElementById("firstName").value = student.firstName;
+					document.getElementById("lastName").value = student.lastName;
+					document.getElementById("attendence").value = student.attendence;
 					document.getElementById("balance").value = student.balance;
 
 					document.getElementById("close")
@@ -95,7 +97,7 @@ async function popup(id) {
 function load() {
 	console.log("loading...")
 	table = document.getElementById("table");
-	fetch("/entrys", {
+	fetch("/all_students", {
 		method: "POST",
 	}).then((response) => {
 		response.json().then((json) => {
@@ -104,9 +106,13 @@ function load() {
 				tr.setAttribute("id", `student-${value.id}`);
 				table.appendChild(tr);
 
-				n = document.createElement("td");
-				n.appendChild(document.createTextNode(value.name));
-				tr.appendChild(n);
+				fn = document.createElement("td");
+				fn.appendChild(document.createTextNode(value.firstName));
+				tr.appendChild(fn);
+
+                ln = document.createElement("td");
+				ln.appendChild(document.createTextNode(value.lastName));
+				tr.appendChild(ln);
 
 				attendence = document.createElement("td");
 				attendence.appendChild(document.createTextNode(

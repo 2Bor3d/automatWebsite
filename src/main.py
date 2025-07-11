@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import flask
 import requests
 import json
@@ -8,7 +7,6 @@ import os
 import csv as csvBib
 import collections
 from datetime import datetime;
-
 from flask import send_file
 import bcrypt
 
@@ -113,8 +111,7 @@ def login():
                                      "username": user["mail"],
                                      "admin": True if user["level"] == "ADMIN" else False,
                                      "courses": courses_user,
-                                     "position": "list",
-                                     "sub": {"course": ""}};
+                                     "position": "list"};
             print(logedin)
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
@@ -156,7 +153,7 @@ def move():
         return flask.make_response("authorisation failed"), 401
 
 
-@app.route("/entrys", methods=["POST"])
+@app.route("/entrys", methods=["POST"]) # derprecated <------------------------
 def entrys(raw=False):
     if checkAuth(flask.request.cookies.get("auth")):
         r = requests.get(IP + "/allStudents");
@@ -164,17 +161,15 @@ def entrys(raw=False):
         entrys = json.loads(r.text)["students"];
 
         user = logedin[flask.request.cookies.get("auth")];
+        print(user)
         if not user["admin"] or \
-                (user["sub"] != {} and user["sub"]["course"] != ""):
+                (user["sub"] != {} and user["sub"][""] != ""):
             r = requests.get(IP + "/courses");
             courses = json.loads(r.text);
             students = set({});
 
-            if user["sub"] == {} or user["sub"]["course"] == "":
-                for cours in user["courses"]:
-                    students = students.union(set(courses[cours]["students"]));
-            else:
-                students = set(courses[user["sub"]["course"]]["students"]);
+            for cours in user["courses"]:
+                students = students.union(set(courses[cours]["students"]));
 
             cleaned = [];
             for entry in entrys:
@@ -221,6 +216,28 @@ def entrys(raw=False):
         return flask.make_response("authorisation failed"), 401
 
 
+@app.route("/all_students", methods=["POST"])
+def all_students():
+    if checkAuth(flask.request.cookies.get("auth")):
+        r = requests.get(IP + "/allStudents");
+        print(r.text)
+        entrys = json.loads(r.text)["students"];
+
+        user = logedin[flask.request.cookies.get("auth")];
+        print(user)
+
+        result = [];
+        if user["admin"]:
+            result = entrys;
+        else:
+            r = requests.get(IP + "/allCourses");
+            courses_file = json.loads(r.text)["courses"];
+            print(courses_file);
+            print("you should implement an option for non-admins....") # <---------------------------
+        return result;
+    return "something went wrong... I dont know what - myb your not authenticated or something...";
+
+
 @app.route("/courses", methods=["POST"])
 def courses():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -228,6 +245,31 @@ def courses():
             r = requests.get(IP + "/allCourses");
             return r.text;
     return flask.make_response("authorisation failed"), 401
+
+
+@app.route("/add_student", methods=["POST"])
+def add_student():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            print("+++")
+            data = json.dumps(flask.request.get_json());
+            print(type(data));
+            r = requests.post(IP + "/addStudent", data=data);
+            print(data)
+            print(r.status_code);
+            print("---")
+            print(r.text)
+            print("---")
+            return "success";
+
+
+@app.route("/add_teacher", methods=["POST"])
+def add_teacher():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            print(requests.post(IP + "/addTeacher", json=flask.request.get_json()).status_code);
+
+            return "success";
 
 
 @app.route("/add_user", methods=["POST"])
@@ -382,6 +424,14 @@ def delete_course():
             r = requests.post(IP + "/change_course", json=courses);
             return "success";
     return "fail";
+
+
+@app.route("/genders", methods=["POST"])
+def genders():
+    if checkAuth(flask.request.cookies.get("auth")):
+        r = requests.get(IP + "/genders");
+        return r.text.split("\n");
+    return "n/a";
 
 
 def inRange(fromm, to, x):
