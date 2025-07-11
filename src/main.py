@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import flask
 import requests
 import json
@@ -8,7 +7,6 @@ import os
 import csv as csvBib
 import collections
 from datetime import datetime;
-
 from flask import send_file
 import bcrypt
 
@@ -230,6 +228,27 @@ def courses():
     return flask.make_response("authorisation failed"), 401
 
 
+@app.route("/add_student", methods=["POST"])
+def add_student():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            data = str(flask.request.get_json()).replace("'", '"');
+            r = requests.post(IP + "/addStudent", json=data);
+            print(data)
+            print(r.status_code);
+            print(r.text)
+            return "success";
+
+
+@app.route("/add_teacher", methods=["POST"])
+def add_teacher():
+    if checkAuth(flask.request.cookies.get("auth")):
+        if logedin[flask.request.cookies.get("auth")]["admin"]:
+            print(requests.post(IP + "/addTeacher", json=flask.request.get_json()).status_code);
+
+            return "success";
+
+
 @app.route("/add_user", methods=["POST"])
 def add_user():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -382,6 +401,14 @@ def delete_course():
             r = requests.post(IP + "/change_course", json=courses);
             return "success";
     return "fail";
+
+
+@app.route("/genders", methods=["POST"])
+def genders():
+    if checkAuth(flask.request.cookies.get("auth")):
+        r = requests.get(IP + "/genders");
+        return r.text.split("\n");
+    return "n/a";
 
 
 def inRange(fromm, to, x):
