@@ -49,12 +49,12 @@
 	border-radius: 10px;
 }
 
-#searchbutton {
+#search button {
 	border-radius: 10px;
 	background-color: #92cc4f;
 }
 
-#searchbutton:hover {
+#search button:hover {
 	background-color: #73a834;
 }
 
