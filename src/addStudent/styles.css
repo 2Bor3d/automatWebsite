@@ -38,19 +38,3 @@ input {
     background-color: #476920;
 }
 
-#leherer {
-    width: 100%;
-    margin-bottom: 10px;
-}
-
-#leherer {
-    border-collapse: collapse;
-}
-#leherer option:hover {
-    background-color: #c4c1c1;
-}
-
-.hidden {
-    display: none;
-}
-
