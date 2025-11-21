@@ -41,14 +41,20 @@ function expand() {
 }
 
 function move(pos, sub) {
+    if (sub == "") {
+        var body = {
+            position: pos,
+            sub: {}
+        }
+    } else {
+        var body = {
+            position: pos,
+            sub: {course:  sub}
+        }
+    }
 	fetch("move", {
 		method: "POST",
-		body: JSON.stringify({
-			position: pos,
-			sub: {
-				course: sub,
-			}
-		}),
+		body: JSON.stringify(body),
 		headers: { "content-type": "application/json; charset=UTF-8", }
 	}).then(
 		() => {

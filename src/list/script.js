@@ -74,18 +74,17 @@ async function popup(id) {
 
 					document.getElementById("firstName").value = student.firstName;
 					document.getElementById("lastName").value = student.lastName;
-					document.getElementById("attendence").value = student.attendence;
+					document.getElementById("attendanceDate").value = student.attendence;
 					document.getElementById("balance").value = student.balance;
 
-					document.getElementById("close")
-						.setAttribute("onclick", `closePopup()`);
 					document.getElementById("save")
 						.setAttribute("onclick", `save('${id}')`);
 					document.getElementById("delete")
 						.setAttribute("onclick", `deleteUser('${id}')`);
                     
                     if (username["admin"]) {
-                        document.getElementById("name").removeAttribute("disabled");
+                        document.getElementById("firstName").removeAttribute("disabled");
+                        document.getElementById("lastName").removeAttribute("disabled");
                         document.getElementById("delete").removeAttribute("disabled");
                     }
 				}

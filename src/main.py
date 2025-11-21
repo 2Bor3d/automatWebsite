@@ -99,6 +99,8 @@ def login():
     response = flask.make_response("wrong username or password", 401)
     for user in users:
         #if user["mail"] == attempt["username"] and bcrypt.checkpw(attempt["password"].encode('utf-8'), bytes(user["password"], "utf-8")): ### fix as soon as ben fixed
+        print(":::")
+        print(bcrypt.checkpw(attempt["password"].encode(), user["password"].encode()))
         if user["mail"] == attempt["username"] and "123" == attempt["password"]:
             courses_user = [];
             for course in courses_file:
@@ -111,7 +113,8 @@ def login():
                                      "username": user["mail"],
                                      "admin": True if user["level"] == "ADMIN" else False,
                                      "courses": courses_user,
-                                     "position": "list"};
+                                     "position": "list",
+                                     "sub": {}};
             print(logedin)
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
@@ -227,15 +230,33 @@ def all_students():
         print(user)
 
         result = [];
-        if user["admin"]:
+
+        if "course" in user["sub"].keys():
+            auth = False;
+            if user["admin"]:
+                auth = True;
+            else:
+                r = requests.get(IP + "/allCourses");
+                courses = json.loads(r.text)["courses"];
+
+                for course in courses:
+                    if course["id"] == user["sub"]["course"] and \
+                            course["tutor"]["id"] == user["id"]:
+                        auth = True;
+                        break;
+            if auth:
+                for entry in entrys:
+                    for course in entry["kurse"]:
+                        if user["sub"]["course"] == str(course["id"]):
+                            result.append(entry);
+                        #elif user["sub"]["course"] == "":
+                        #    result.append(entry);
+                    #if user["sub"]["course"] in entry["kurse"]:
+                    #    result.append(entry);
+        elif user["admin"]:
             result = entrys;
-        else:
-            r = requests.get(IP + "/allCourses");
-            courses_file = json.loads(r.text)["courses"];
-            print(courses_file);
-            print("you should implement an option for non-admins....") # <---------------------------
         return result;
-    return "something went wrong... I dont know what - myb your not authenticated or something...";
+    return flask.make_response("authorisation failed"), 401
 
 
 @app.route("/courses", methods=["POST"])
@@ -251,16 +272,12 @@ def courses():
 def add_student():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            print("+++")
             data = json.dumps(flask.request.get_json());
-            print(type(data));
             r = requests.post(IP + "/addStudent", data=data);
-            print(data)
-            print(r.status_code);
-            print("---")
-            print(r.text)
-            print("---")
-            return "success";
+            if r.status_code == 200:
+                return "success";
+            else:
+                return "unknown error";
 
 
 @app.route("/add_teacher", methods=["POST"])
@@ -520,4 +537,4 @@ def csv():# TODO: use exact course -> Ben
 
 
 if __name__ == "__main__":
-    app.run(port=8080, host="0.0.0.0")
+    app.run(port=8080, host="0.0.0.0", debug=True)

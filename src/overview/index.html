@@ -18,14 +18,22 @@
 			</table>
 		</main>
 		<div id="popup" class="hidden">
-			<button id="close" onclick="close()">Schließen</button>
+			<button id="close" onclick="closePopup()">Schließen</button>
 			<div class="row">
 				<p class="lable">Name: </p>
 				<input id="name">
 			</div>
 			<div class="row">
-				<p class="lable">Tag: </p>
-				<input id="day" type="number">
+	        <label for="day">Tag:</label>
+            <select id="day" name="day">
+                <option value="MONDTAG">Montag</option>
+                <option value="DEINSTAG">Dienstag</option>
+                <option value="METTWOCH">Mittwoch</option>
+                <option value="DÖNERTAG">Donnerstag</option>
+                <option value="REINTAG">Freitag</option>
+                <option value="SAUFTAG">Samstag</option>
+                <option value="SONNDAG">Sonntag</option>
+            </select>
 			</div>
 			<div class="row">
 				<p class="lable">Teilnehmende: </p>

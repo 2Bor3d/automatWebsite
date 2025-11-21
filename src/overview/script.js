@@ -33,20 +33,20 @@ function popup(id) {
 		method: "POST",
 	}).then((response) => {
 		response.json().then((json) => {
-			Object.keys(json).forEach((value, index, array) => {
-				if (value == id) {
+			Object.keys(json["courses"]).forEach((element) => {
+				if (element == id) {
 					div = document.getElementById("popup");
 					div.classList.remove("hidden");
 
-					document.getElementById("name").value = value;
-					document.getElementById("day").value = json[value]["day"];
+					document.getElementById("name").value = 
+                        json["courses"][element]["name"];
+					document.getElementById("day").value = 
+                        json["courses"][element]["day"];
 					document.getElementById("students").value = 
-                        json[value]["students"];
+                        json["courses"][element]["students"];
                     document.getElementById("users").value = 
-                        json[value]["users"];
+                        json["courses"][element]["users"];
 
-					document.getElementById("close")
-						.setAttribute("onclick", `closePopup()`);
 					document.getElementById("save")
 						.setAttribute("onclick", `save('${id}')`);
 					document.getElementById("delete")
@@ -64,29 +64,31 @@ function load() {
 		method: "POST",
 	}).then((response) => {
 		response.json().then((json) => {
-            console.log(json)
-			Object.keys(json).forEach((value, index, array) => {
+            console.log(json["courses"])
+			Object.keys(json["courses"]).forEach((element) => {
+                console.log(element)
 				tr = document.createElement("tr");
-				tr.setAttribute("id", `course-${value}`);
+				tr.setAttribute("id", `course-${element}`);
 				table.appendChild(tr);
 
 				n = document.createElement("td");
-				n.appendChild(document.createTextNode(value));
+				n.appendChild(document.createTextNode(json["courses"][element]["name"]));
 				tr.appendChild(n);
 
 				attendence = document.createElement("td");
 				attendence.appendChild(document.createTextNode(
-					json[value]["day"]));
+					json["courses"][element]["day"]));
 				tr.appendChild(attendence);
 
 				time = document.createElement("td");
 				time.appendChild(document.createTextNode(
-                    json[value]["students"]));
+                    json["courses"][element]["tutor"][0]["firstName"]+" "+
+                    json["courses"][element]["tutor"][0]["lastName"]));
 				tr.appendChild(time);
 
 				punish_button = document.createElement("td");
 				button = document.createElement("button");
-				button.setAttribute("onclick", `popup('${value}')`);
+				button.setAttribute("onclick", `popup('${element}')`);
 				button.innerText = "editieren";
 				punish_button.appendChild(button);
 				tr.appendChild(punish_button);

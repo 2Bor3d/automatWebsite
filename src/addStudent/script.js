@@ -96,7 +96,7 @@ function submit() {
                     "zip": zip,
                     "country": country,
                 },
-                "kurse": []
+                "kurse": [1]
             }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
