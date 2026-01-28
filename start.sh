@@ -1,3 +1,3 @@
-python3.12 apiDummy/dummy.py &
 cd src/
-python3.12 main.py
+tmux new-session -d -s website
+tmux send-keys -t javaBackend "python3.13 main.py" c-m
