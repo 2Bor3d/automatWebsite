@@ -37,7 +37,7 @@ function submit() {
 
     firstName = document.getElementById("firstName").value;
     lastName = document.getElementById("lastName").value;
-    rfid = document.getElementById("rfid").checked ? [] : [0,0,0,0,0];
+    rfid = document.getElementById("rfid").checked ? "false" : "true";
     gender = document.getElementById("gender").value;
     birthday = new Date(document.getElementById("birthday").value).getTime();
     nr = parseInt(document.getElementById("nr").value);

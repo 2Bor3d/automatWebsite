@@ -1,18 +1,18 @@
-from pathlib import Path
 import flask
 import requests
 import json
 import base64
 import os
 import csv as csvBib
-import collections
 from datetime import datetime;
 from flask import send_file
 import bcrypt
+import time
 
 app = flask.Flask(__name__);
 
 logedin = {};
+scanner = {"active": True, "id": []};
 
 IP = "http://127.0.0.1:8000";
 #IP = "http://192.168.4.1";
@@ -22,6 +22,11 @@ def checkAuth(auth: str) -> bool:
     if auth in logedin:
         return True;
     return False;
+
+
+@app.route("/ping")
+def ping():
+    return "BEN IST SCHEIßE";
 
 
 @app.route("/")
@@ -270,10 +275,22 @@ def courses():
 
 @app.route("/add_student", methods=["POST"])
 def add_student():
+    global scanner;
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            data = json.dumps(flask.request.get_json());
-            r = requests.post(IP + "/addStudent", data=data);
+            data = flask.request.get_json();
+            print(data)
+            if data["rfid"] == "true":
+                scanner["active"] = True;
+                for i in range(100):
+                    if scanner["id"] != []:
+                        data["rfid"] = scanner["id"];
+                        scanner = {"active": False, "id": []};
+                        print("SCANNED")
+                        break;
+                    else:
+                        time.sleep(0.1);
+            r = requests.post(IP + "/addStudent", data=json.dumps(data));
             if r.status_code == 200:
                 return "success";
             else:
@@ -293,53 +310,12 @@ def add_teacher():
 def add_user():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]:
-            new = dict(flask.request.form);
-
-            number = None;
-            if "rfid" in new.keys():
-                print("RFID")
-                r = requests.get(IP + "/data");
-
-                r = requests.post(IP + "/scan");
-                rfid = r.text;
-
-                card_type = {"admin": 0, "teacher": 1, "student": 2}[new["type"]];
-
-                person = {"number": number,
-                          "name": new["name"],
-                          "type": card_type,
-                          "rfid": rfid,
-                          "attended": [],
-                          "since": None,
-                          "time": 0}
-
-                r = requests.post(IP + "/addStudent", json=person);
-
-            if new["type"] != "student":
-                r = requests.get(IP + "/users");
-                users = json.loads(r.text);
-
-                user_id = 0
-                for user in users:
-                    if user["id"] >= user_id:
-                        user_id = user["id"] + 1
-
-                admin = {"teacher": True, "admin": False}[new["type"]];
-
-                user = {"id": user_id,
-                        "username": new["mail"],
-                        "password": new["password"],
-                        "admin": admin,
-                        "number": number}
-                users.append(user);
-                r = requests.post(IP + "/change_user_file", json=users);
-
-                user = {};
-            with open("addStudent/response/successNoCard.html", "r") as file:
-                return file.read().replace("{user}", new["name"]);
-
-    with open("addStudent/response/error.html", "r") as file:
-        return file.read();
+            print(flask.request.get_json())
+            print(flask.request.form)
+            #sutdent: dict = {
+            #        "firstName": 
+            #r = requests.post(IP + "/addStudent", json=)
+    return "fail";
 
 
 @app.route("/change_user", methods=["POST"])
@@ -536,5 +512,27 @@ def csv():# TODO: use exact course -> Ben
     return send_file("students.csv", as_attachment=True)
 
 
+@app.route("/scan", methods=["POST"])
+def scan():
+    data = flask.request.get_data()
+    print(json.loads(data))
+    if scanner["active"]:
+        scanner["id"] = json.loads(data);
+        print("something")
+    else:
+        r = requests.post(IP + "/scanned", json={"rfid": json.loads(data)})
+        print(r)
+    return "idk bro"
+
+
+@app.route("/station_scan", methods=["POST"])
+def station_scan():
+    data = flask.request.get_data()
+    r = requests.post(IP + "/login", json={"rfid": json.loads(data)})
+    print(r.text)
+    return r.text
+
+
 if __name__ == "__main__":
     app.run(port=8080, host="0.0.0.0", debug=True)
+
