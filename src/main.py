@@ -27,9 +27,22 @@ def checkAuth(auth: str) -> bool:
 
 # ---------- helpers for new API ----------
 
+def _call(method: str, url: str, **kwargs):
+    """Call hmac_client, log any error, return response or None."""
+    try:
+        r = getattr(hmac_client, method)(url, **kwargs)
+        if r.status_code != 200:
+            print(f"[API ERROR] {method.upper()} {url} → HTTP {r.status_code}: {r.text[:200]}")
+            return None
+        return r
+    except Exception as e:
+        print(f"[API ERROR] {method.upper()} {url} → {type(e).__name__}: {e}")
+        return None
+
+
 def get_attendances(student_id: int) -> list:
-    r = hmac_client.post(IP + "/attendances", json_body={"id": student_id})
-    if r.status_code != 200:
+    r = _call("post", IP + "/attendances", json_body={"id": student_id})
+    if r is None:
         return []
     return json.loads(r.text).get("attendances", [])
 
@@ -128,10 +141,12 @@ def pageCss():
 @app.route("/login", methods=["POST"])
 def login():
     attempt = flask.request.get_json();
-    r = hmac_client.get(IP + "/teacher/allTeachers");
+    r = _call("get", IP + "/teacher/allTeachers");
+    if r is None: return flask.make_response("backend unavailable", 503)
     users = json.loads(r.text)["teachers"];
 
-    r = hmac_client.get(IP + "/course/allCourses");
+    r = _call("get", IP + "/course/allCourses");
+    if r is None: return flask.make_response("backend unavailable", 503)
     courses_file = json.loads(r.text)["courses"];
 
     response = flask.make_response("wrong username or password", 401)
@@ -159,7 +174,8 @@ def login():
 @app.route("/username", methods=["POST"])
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = hmac_client.get(IP + "/course/allCourses");
+        r = _call("get", IP + "/course/allCourses");
+        if r is None: return flask.make_response("backend unavailable", 503)
         courses_file = json.loads(r.text)["courses"];
         user_id = logedin[flask.request.cookies.get("auth")]["id"]
 
@@ -189,7 +205,8 @@ def move():
 
 def _fetch_filtered_students(user: dict) -> list:
     """Return new-API student list filtered by course access and sub-filters."""
-    r = hmac_client.get(IP + "/student/allStudents");
+    r = _call("get", IP + "/student/allStudents");
+    if r is None: return []
     students = json.loads(r.text)["students"];
 
     if not user["admin"]:
@@ -245,7 +262,8 @@ def all_students():
     if "course" in user.get("sub", {}):
         auth_ok = user["admin"]
         if not auth_ok:
-            r = hmac_client.get(IP + "/course/allCourses")
+            r = _call("get", IP + "/course/allCourses")
+            if r is None: return flask.make_response("backend unavailable", 503)
             courses = json.loads(r.text)["courses"]
             for course in courses:
                 if str(course["id"]) == str(user["sub"]["course"]) and \
@@ -267,7 +285,8 @@ def all_students():
 def courses():
     if checkAuth(flask.request.cookies.get("auth")) and \
             logedin[flask.request.cookies.get("auth")]["admin"]:
-        r = hmac_client.get(IP + "/course/allCourses");
+        r = _call("get", IP + "/course/allCourses");
+        if r is None: return flask.make_response("backend unavailable", 503)
         courses_list = json.loads(r.text)["courses"];
         courses_dict = {}
         for course in courses_list:
@@ -306,12 +325,12 @@ def add_student():
     elif isinstance(rfid_field, list):
         scanned_rfid = rfid_field
 
-    r = hmac_client.post(IP + "/student/addStudent", json_body=data);
-    if r.status_code != 200:
+    r = _call("post", IP + "/student/addStudent", json_body=data);
+    if r is None:
         return "unknown error";
 
     if scanned_rfid:
-        hmac_client.post(IP + "/seed/flush", json_body={"rfid": scanned_rfid});
+        _call("post", IP + "/seed/flush", json_body={"rfid": scanned_rfid});
 
     return "success";
 
@@ -320,7 +339,8 @@ def add_student():
 def add_teacher():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            print(hmac_client.post(IP + "/teacher/addTeacher", json_body=flask.request.get_json()).status_code);
+            r = _call("post", IP + "/teacher/addTeacher", json_body=flask.request.get_json());
+            if r is None: return "fail"
             return "success";
 
 
@@ -348,7 +368,7 @@ def change_user():
             "firstName": parts[0],
             "lastName": parts[1] if len(parts) > 1 else "",
         }
-        hmac_client.post(IP + "/student/modify", json_body=patch);
+        _call("post", IP + "/student/modify", json_body=patch);
 
     if changes.get("date") is not None and changes["date"] != 0:
         ts_sec = int(changes["date"]);
@@ -363,7 +383,7 @@ def change_user():
             "logout": (ts_sec + 7200) * 1000,
             "type": att_type,
         }
-        hmac_client.post(IP + "/seed/attendance", json_body=att_body);
+        _call("post", IP + "/seed/attendance", json_body=att_body);
 
     return "success"
 
@@ -373,7 +393,7 @@ def delete_user():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             user_id = flask.request.get_json()["id"];
-            r = hmac_client.delete(IP + "/student/delete", json_body={"id": int(user_id)});
+            r = _call("delete", IP + "/student/delete", json_body={"id": int(user_id)});
             if r.status_code == 200:
                 return "success";
     return "fail"
@@ -383,7 +403,8 @@ def delete_user():
 def get_users():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = hmac_client.get(IP + "/teacher/allTeachers");
+            r = _call("get", IP + "/teacher/allTeachers");
+            if r is None: return "fail"
             users = json.loads(r.text)["teachers"];
             return users;
     return "fail";
@@ -399,7 +420,8 @@ def add_course():
                 "day": changes["day"],
                 "tutor": [changes["user"]],
             }
-            r = hmac_client.post(IP + "/course/addCourse", json_body=course);
+            r = _call("post", IP + "/course/addCourse", json_body=course);
+            if r is None: return "fail"
             return "success";
     return "fail";
 
@@ -414,8 +436,8 @@ def change_course():
                 patch["name"] = changes["name"];
             if changes.get("day"):
                 patch["day"] = changes["day"];
-            r = hmac_client.post(IP + "/course/modify", json_body=patch);
-            if r.status_code == 200:
+            r = _call("post", IP + "/course/modify", json_body=patch);
+            if r is not None:
                 return "success";
     return "fail"
 
@@ -425,7 +447,7 @@ def delete_course():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             course_id = flask.request.get_json()["id"];
-            r = hmac_client.delete(IP + "/course/delete", json_body={"id": int(course_id)});
+            r = _call("delete", IP + "/course/delete", json_body={"id": int(course_id)});
             if r.status_code == 200:
                 return "success";
     return "fail";
@@ -472,7 +494,8 @@ def csv():
     if os.path.exists(file_path):
         os.remove(file_path)
 
-    r = hmac_client.get(IP + "/student/allStudents");
+    r = _call("get", IP + "/student/allStudents");
+    if r is None: return flask.make_response("backend unavailable", 503)
     students = json.loads(r.text)["students"];
     students.sort(key=lambda s: s["id"])
 
@@ -516,7 +539,7 @@ def scan():
         scanner["id"] = json.loads(data);
         print("something")
     else:
-        r = hmac_client.post(IP + "/scanned", json_body={"rfid": json.loads(data)})
+        r = _call("post", IP + "/scanned", json_body={"rfid": json.loads(data)})
         print(r)
     return "idk bro"
 
@@ -524,7 +547,8 @@ def scan():
 @app.route("/station_scan", methods=["POST"])
 def station_scan():
     data = flask.request.get_data()
-    r = hmac_client.post(IP + "/login", json_body={"rfid": json.loads(data)})
+    r = _call("post", IP + "/login", json_body={"rfid": json.loads(data)})
+    if r is None: return "login failed"
     print(r.text)
     return r.text
 
