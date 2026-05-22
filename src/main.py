@@ -1,6 +1,7 @@
 import flask
 import requests
 import json
+import hmac_client
 import base64
 import os
 import csv as csvBib
@@ -24,6 +25,41 @@ def checkAuth(auth: str) -> bool:
     return False;
 
 
+# ---------- helpers for new API ----------
+
+def get_attendances(student_id: int) -> list:
+    r = hmac_client.post(IP + "/attendances", json_body={"id": student_id})
+    if r.status_code != 200:
+        return []
+    return json.loads(r.text).get("attendances", [])
+
+
+def last_attendance_date(attendances: list) -> str:
+    if not attendances:
+        return "None"
+    last = attendances[-1]
+    return f"{last['year']}-{last['month']:02d}-{last['day']:02d}"
+
+
+def student_balance(entry: dict) -> float:
+    hours = entry.get("hours", [])
+    return hours[0] if hours else 0
+
+
+def format_for_list(entry: dict, attendances: list) -> dict:
+    return {
+        "id": entry["id"],
+        "firstName": entry["firstName"],
+        "lastName": entry["lastName"],
+        "attendence": last_attendance_date(attendances),
+        "balance": student_balance(entry),
+        "warning": False,
+    }
+
+
+# -----------------------------------------
+
+
 @app.route("/ping")
 def ping():
     return "BEN IST SCHEIßE";
@@ -42,7 +78,6 @@ def index():
 @app.route("/script.js")
 def script():
     if checkAuth(flask.request.cookies.get("auth")):
-
         with open("script.js", "r") as file:
             return file.read();
     else:
@@ -93,34 +128,28 @@ def pageCss():
 @app.route("/login", methods=["POST"])
 def login():
     attempt = flask.request.get_json();
-    r = requests.get(IP + "/allTeachers");
+    r = hmac_client.get(IP + "/teacher/allTeachers");
     users = json.loads(r.text)["teachers"];
-    print(users)
 
-    r = requests.get(IP + "/allCourses");
+    r = hmac_client.get(IP + "/course/allCourses");
     courses_file = json.loads(r.text)["courses"];
-    print(courses_file);
 
     response = flask.make_response("wrong username or password", 401)
     for user in users:
-        #if user["mail"] == attempt["username"] and bcrypt.checkpw(attempt["password"].encode('utf-8'), bytes(user["password"], "utf-8")): ### fix as soon as ben fixed
-        print(":::")
         print(bcrypt.checkpw(attempt["password"].encode(), user["password"].encode()))
         if user["mail"] == attempt["username"] and "123" == attempt["password"]:
-            courses_user = [];
-            for course in courses_file:
-                if user in course["tutor"]:
-                    courses_user.append(course);
+            tutor_id = user["id"]
+            courses_user = [c for c in courses_file
+                            if any(t["id"] == tutor_id for t in c.get("tutor", []))]
             random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
-            ############################################# fails 1/1431655765 times
-            print("----------")
-            logedin[random_bytes] = {"id": user["id"],
-                                     "username": user["mail"],
-                                     "admin": True if user["level"] == "ADMIN" else False,
-                                     "courses": courses_user,
-                                     "position": "list",
-                                     "sub": {}};
-            print(logedin)
+            logedin[random_bytes] = {
+                "id": user["id"],
+                "username": user["mail"],
+                "admin": user["level"] == "ADMIN",
+                "courses": courses_user,
+                "position": "list",
+                "sub": {},
+            };
             response = flask.make_response("success", 200);
             response.set_cookie("auth", random_bytes);
             break;
@@ -130,20 +159,17 @@ def login():
 @app.route("/username", methods=["POST"])
 def username():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/allCourses");
+        r = hmac_client.get(IP + "/course/allCourses");
         courses_file = json.loads(r.text)["courses"];
+        user_id = logedin[flask.request.cookies.get("auth")]["id"]
 
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             courses_user = courses_file;
         else:
-            courses_user = [];
-            for course in courses_file:
-                if logedin[flask.request.cookies.get("auth")]["id"] \
-                        in course["tutor"]:
-                    courses_user.append(course);
+            courses_user = [c for c in courses_file
+                            if any(t["id"] == user_id for t in c.get("tutor", []))]
 
         logedin[flask.request.cookies.get("auth")]["courses"] = courses_user;
-
         return logedin[flask.request.cookies.get("auth")];
     else:
         return flask.make_response("authorisation failed"), 401
@@ -161,148 +187,140 @@ def move():
         return flask.make_response("authorisation failed"), 401
 
 
-@app.route("/entrys", methods=["POST"]) # derprecated <------------------------
+def _fetch_filtered_students(user: dict) -> list:
+    """Return new-API student list filtered by course access and sub-filters."""
+    r = hmac_client.get(IP + "/student/allStudents");
+    students = json.loads(r.text)["students"];
+
+    if not user["admin"]:
+        user_course_ids = {c["id"] for c in user.get("courses", [])}
+        students = [s for s in students
+                    if any(k["id"] in user_course_ids for k in s.get("kurse", []))]
+
+    sub = user.get("sub", {})
+
+    if sub.get("course", "") != "":
+        course_id = str(sub["course"])
+        students = [s for s in students
+                    if any(str(k["id"]) == course_id for k in s.get("kurse", []))]
+
+    if sub.get("term", "") != "":
+        term = sub["term"].lower()
+        students = [s for s in students
+                    if term in str(s["id"]) or
+                    term in (s["firstName"] + " " + s["lastName"]).lower()]
+
+    return students
+
+
+@app.route("/entrys", methods=["POST"])
 def entrys(raw=False):
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/allStudents");
-        print(r.text)
-        entrys = json.loads(r.text)["students"];
-
-        user = logedin[flask.request.cookies.get("auth")];
-        print(user)
-        if not user["admin"] or \
-                (user["sub"] != {} and user["sub"][""] != ""):
-            r = requests.get(IP + "/courses");
-            courses = json.loads(r.text);
-            students = set({});
-
-            for cours in user["courses"]:
-                students = students.union(set(courses[cours]["students"]));
-
-            cleaned = [];
-            for entry in entrys:
-                if entry["number"] in students:
-                    cleaned.append(entry);
-            entrys = cleaned;
-
-        if user["sub"] != {} and \
-                "term" in user["sub"] and \
-                user["sub"]["term"] != "":
-
-            term = user["sub"]["term"].lower();
-            cleaned = [];
-            for entry in entrys:
-                if term in str(entry["number"]).lower() or \
-                        term in entry["name"].lower():
-                    cleaned.append(entry);
-            entrys = cleaned;
-
-        new = [];
-        for entry in entrys:
+        user = logedin[flask.request.cookies.get("auth")]
+        students = _fetch_filtered_students(user)
+        result = []
+        for s in students:
+            atts = get_attendances(s["id"])
             if raw:
-                new.append({
-                    "id": entry["number"],
-                    "name": entry["name"],
-                    "attendance": entry["attended"],
-                    "balance": entry["time"]
-                });
+                result.append({
+                    "id": s["id"],
+                    "name": s["firstName"] + " " + s["lastName"],
+                    "attendances": atts,
+                    "balance": student_balance(s),
+                })
             else:
-                if entry["attended"][-1][1] - entry["attended"][-1][0] < 7200 and entry["attended"][-1][1] - entry["attended"][-1][0] != 0:
-                    warning = True;
-                else:
-                    warning = False;
-                print(entry["attended"][-1][1] - entry["attended"][-1][0])
-                new.append({
-                    "id": entry["number"],
-                    "name": entry["name"],
-                    "attendence": datetime.utcfromtimestamp(entry["attended"][-1][0] + 946684800).strftime(
-                        '%Y-%m-%d') if len(entry["attended"]) > 0 else "None",
-                    "balance": entry["time"],
-                    "warning": warning});
-        return new;
+                result.append(format_for_list(s, atts))
+        return result;
     else:
         return flask.make_response("authorisation failed"), 401
 
 
 @app.route("/all_students", methods=["POST"])
 def all_students():
-    if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/allStudents");
-        print(r.text)
-        entrys = json.loads(r.text)["students"];
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
 
-        user = logedin[flask.request.cookies.get("auth")];
-        print(user)
+    user = logedin[flask.request.cookies.get("auth")]
 
-        result = [];
+    if "course" in user.get("sub", {}):
+        auth_ok = user["admin"]
+        if not auth_ok:
+            r = hmac_client.get(IP + "/course/allCourses")
+            courses = json.loads(r.text)["courses"]
+            for course in courses:
+                if str(course["id"]) == str(user["sub"]["course"]) and \
+                        any(t["id"] == user["id"] for t in course.get("tutor", [])):
+                    auth_ok = True
+                    break
+        if not auth_ok:
+            return flask.make_response("authorisation failed"), 401
 
-        if "course" in user["sub"].keys():
-            auth = False;
-            if user["admin"]:
-                auth = True;
-            else:
-                r = requests.get(IP + "/allCourses");
-                courses = json.loads(r.text)["courses"];
-
-                for course in courses:
-                    if course["id"] == user["sub"]["course"] and \
-                            course["tutor"]["id"] == user["id"]:
-                        auth = True;
-                        break;
-            if auth:
-                for entry in entrys:
-                    for course in entry["kurse"]:
-                        if user["sub"]["course"] == str(course["id"]):
-                            result.append(entry);
-                        #elif user["sub"]["course"] == "":
-                        #    result.append(entry);
-                    #if user["sub"]["course"] in entry["kurse"]:
-                    #    result.append(entry);
-        elif user["admin"]:
-            result = entrys;
-        return result;
-    return flask.make_response("authorisation failed"), 401
+    students = _fetch_filtered_students(user)
+    result = []
+    for s in students:
+        atts = get_attendances(s["id"])
+        result.append(format_for_list(s, atts))
+    return result;
 
 
 @app.route("/courses", methods=["POST"])
 def courses():
-    if checkAuth(flask.request.cookies.get("auth")):
-        if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = requests.get(IP + "/allCourses");
-            return r.text;
+    if checkAuth(flask.request.cookies.get("auth")) and \
+            logedin[flask.request.cookies.get("auth")]["admin"]:
+        r = hmac_client.get(IP + "/course/allCourses");
+        courses_list = json.loads(r.text)["courses"];
+        courses_dict = {}
+        for course in courses_list:
+            courses_dict[str(course["id"])] = {
+                "name": course["name"],
+                "day": course["day"],
+                "tutor": course.get("tutor", []),
+                "students": "",
+                "users": ",".join(str(t["id"]) for t in course.get("tutor", [])),
+            }
+        return {"courses": courses_dict}
     return flask.make_response("authorisation failed"), 401
 
 
 @app.route("/add_student", methods=["POST"])
 def add_student():
     global scanner;
-    if checkAuth(flask.request.cookies.get("auth")):
-        if logedin[flask.request.cookies.get("auth")]["admin"]:
-            data = flask.request.get_json();
-            print(data)
-            if data["rfid"] == "true":
-                scanner["active"] = True;
-                for i in range(100):
-                    if scanner["id"] != []:
-                        data["rfid"] = scanner["id"];
-                        scanner = {"active": False, "id": []};
-                        print("SCANNED")
-                        break;
-                    else:
-                        time.sleep(0.1);
-            r = requests.post(IP + "/addStudent", data=json.dumps(data));
-            if r.status_code == 200:
-                return "success";
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return "fail"
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return "fail"
+
+    data = flask.request.get_json();
+    rfid_field = data.pop("rfid", None)
+
+    scanned_rfid = None
+    if rfid_field == "true":
+        scanner["active"] = True;
+        for i in range(100):
+            if scanner["id"] != []:
+                scanned_rfid = scanner["id"];
+                scanner = {"active": False, "id": []};
+                break;
             else:
-                return "unknown error";
+                time.sleep(0.1);
+    elif isinstance(rfid_field, list):
+        scanned_rfid = rfid_field
+
+    r = hmac_client.post(IP + "/student/addStudent", json_body=data);
+    if r.status_code != 200:
+        return "unknown error";
+
+    if scanned_rfid:
+        hmac_client.post(IP + "/seed/flush", json_body={"rfid": scanned_rfid});
+
+    return "success";
 
 
 @app.route("/add_teacher", methods=["POST"])
 def add_teacher():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            print(requests.post(IP + "/addTeacher", json=flask.request.get_json()).status_code);
-
+            print(hmac_client.post(IP + "/teacher/addTeacher", json_body=flask.request.get_json()).status_code);
             return "success";
 
 
@@ -312,50 +330,52 @@ def add_user():
         if logedin[flask.request.cookies.get("auth")]:
             print(flask.request.get_json())
             print(flask.request.form)
-            #sutdent: dict = {
-            #        "firstName": 
-            #r = requests.post(IP + "/addStudent", json=)
     return "fail";
 
 
 @app.route("/change_user", methods=["POST"])
 def change_user():
-    if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/data");
-        data = json.loads(r.text)["people"];
-        changes = flask.request.get_json();
-        for i in range(len(data)):
-            if data[i]["number"] == int(changes["id"]):
-                if logedin[flask.request.cookies.get("auth")]["admin"]:
-                    data[i]["name"] = changes["name"];
-                data[i]["time"] = changes["balance"];
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return "fail"
 
-                if changes["date"] is not None:
-                    if changes["attendance"] == "present":
-                        data[i]["attended"] \
-                            .append([int(changes["date"]) - 946684800]);
-                    elif changes["attendance"] == "excused":
-                        data[i]["excused"] \
-                            .append(int(changes["date"]) - 946684800);
-        r = requests.post(IP + "/change_user", json=data);
-    return "fail"
+    changes = flask.request.get_json();
+    student_id = int(changes["id"]);
+
+    if logedin[flask.request.cookies.get("auth")]["admin"] and changes.get("name"):
+        parts = changes["name"].split(" ", 1);
+        patch = {
+            "id": student_id,
+            "firstName": parts[0],
+            "lastName": parts[1] if len(parts) > 1 else "",
+        }
+        hmac_client.post(IP + "/student/modify", json_body=patch);
+
+    if changes.get("date") is not None and changes["date"] != 0:
+        ts_sec = int(changes["date"]);
+        dt = datetime.utcfromtimestamp(ts_sec);
+        att_type = "NORMAL" if changes.get("attendance") == "present" else "EXCUSED"
+        att_body = {
+            "id": student_id,
+            "day": dt.day,
+            "month": dt.month,
+            "year": dt.year,
+            "login": ts_sec * 1000,
+            "logout": (ts_sec + 7200) * 1000,
+            "type": att_type,
+        }
+        hmac_client.post(IP + "/seed/attendance", json_body=att_body);
+
+    return "success"
 
 
 @app.route("/delete_user", methods=["POST"])
 def delete_user():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            print(flask.request.json)
-            r = requests.get(IP + "/data");
-            data = json.loads(r.text)["people"];
-            user = flask.request.get_json()["id"];
-
-            for i in range(len(data)):
-                if data[i]["number"] == int(user):
-                    data.pop(i);
-                    break;
-            r = requests.post(IP + "/change_user", json=data);
-            return "success"
+            user_id = flask.request.get_json()["id"];
+            r = hmac_client.delete(IP + "/student/delete", json_body={"id": int(user_id)});
+            if r.status_code == 200:
+                return "success";
     return "fail"
 
 
@@ -363,7 +383,7 @@ def delete_user():
 def get_users():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = requests.get(IP + "/allTeachers");
+            r = hmac_client.get(IP + "/teacher/allTeachers");
             users = json.loads(r.text)["teachers"];
             return users;
     return "fail";
@@ -374,12 +394,12 @@ def add_course():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             changes = dict(flask.request.form);
-            print(changes)
-            course = {"name": changes["name"],
-                      "day": changes["day"],
-                      "tutor": [changes["user"]]}
-
-            r = requests.post(IP + "/addCourse", json=course);
+            course = {
+                "name": changes["name"],
+                "day": changes["day"],
+                "tutor": [changes["user"]],
+            }
+            r = hmac_client.post(IP + "/course/addCourse", json_body=course);
             return "success";
     return "fail";
 
@@ -388,19 +408,15 @@ def add_course():
 def change_course():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = requests.get(IP + "/courses");
-            courses = json.loads(r.text);
             changes = flask.request.get_json();
-
-            courses[changes["name"]] = courses.pop(changes["old"]);
-            courses[changes["name"]]["day"] = changes["day"];
-            courses[changes["name"]]["students"] = [];
-            for student in changes["students"].split(","):
-                courses[changes["name"]]["students"].append(int(student));
-            courses[changes["name"]]["users"] = [];
-            for user in changes["users"].split(","):
-                courses[changes["name"]]["users"].append(int(user));
-            r = requests.post(IP + "/change_course", json=courses);
+            patch = {"id": int(changes["old"])};
+            if changes.get("name"):
+                patch["name"] = changes["name"];
+            if changes.get("day"):
+                patch["day"] = changes["day"];
+            r = hmac_client.post(IP + "/course/modify", json_body=patch);
+            if r.status_code == 200:
+                return "success";
     return "fail"
 
 
@@ -408,22 +424,17 @@ def change_course():
 def delete_course():
     if checkAuth(flask.request.cookies.get("auth")):
         if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = requests.get(IP + "/courses");
-            courses = json.loads(r.text);
-            course = flask.request.get_json()["id"];
-
-            courses.pop(course);
-
-            r = requests.post(IP + "/change_course", json=courses);
-            return "success";
+            course_id = flask.request.get_json()["id"];
+            r = hmac_client.delete(IP + "/course/delete", json_body={"id": int(course_id)});
+            if r.status_code == 200:
+                return "success";
     return "fail";
 
 
 @app.route("/genders", methods=["POST"])
 def genders():
     if checkAuth(flask.request.cookies.get("auth")):
-        r = requests.get(IP + "/genders");
-        return r.text.split("\n");
+        return [];
     return "n/a";
 
 
@@ -432,81 +443,66 @@ def inRange(fromm, to, x):
         fromm = "0000-00-00";
     if to == '':
         to = "9999-99-99";
-    if x == '':
-        raise "x cant be null"
     fromm = str(fromm).split("-")
     to = str(to).split("-")
     x = str(x).split("-")
     if len(fromm) != 3 or len(to) != 3 or len(x) != 3:
-        raise "Wrong format!";
+        return False;
     if int(fromm[0]) > int(x[0]):
         return False;
     elif int(fromm[1]) > int(x[1]):
         return False;
     elif int(fromm[2]) > int(x[2]):
         return False;
-
     if int(to[0]) < int(x[0]):
         return False;
     elif int(to[1]) < int(x[1]):
         return False;
     elif int(to[2]) < int(x[2]):
         return False;
-
     return True
 
 
-# sends a csv file with attendance data specified in the form
-# from -> form.from
-# to -> form.to
-# course -> form.course
 @app.route("/csv", methods=["POST"])
-def csv():# TODO: use exact course -> Ben
+def csv():
     fromm = flask.request.form["from"]
     to = flask.request.form["to"]
-    course = flask.request.form["course"]
 
     file_path = "students.csv"
     if os.path.exists(file_path):
         os.remove(file_path)
 
-    days = set()
-    users = []
-    data = entrys(True)
-    # filter data
-    for entry in data:
-        users.append({"key": int(entry["id"]), "value": entry})
-        for day in entry["attendance"]:
-            for x in day:
-                if not inRange(fromm, to, datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
-                    continue;
-                days.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
+    r = hmac_client.get(IP + "/student/allStudents");
+    students = json.loads(r.text)["students"];
+    students.sort(key=lambda s: s["id"])
 
-    # sort data
-    users.sort(key=lambda x: x["key"])
+    all_days = set()
+    rows = []
 
-    # write data
-    with open('./students.csv', 'a', newline='') as csvfile:
+    for student in students:
+        atts = get_attendances(student["id"])
+        present_days = set()
+        for att in atts:
+            if att.get("type") == "AWAY":
+                continue
+            date_str = f"{att['year']}-{att['month']:02d}-{att['day']:02d}"
+            if inRange(fromm, to, date_str):
+                all_days.add(date_str)
+                present_days.add(date_str)
+        rows.append({
+            "id": student["id"],
+            "name": student["firstName"] + " " + student["lastName"],
+            "days": present_days,
+        })
+
+    sorted_days = sorted(all_days)
+
+    with open('./students.csv', 'w', newline='') as csvfile:
         writer = csvBib.writer(csvfile, delimiter=';')
-        header = ['Index', 'Name']
-        for day in days:
-            header.append(day)
-        writer.writerow(header)
-        print(days)
-
-        for user in users:
-            data = set()
-            for day in user["value"]['attendance']:
-                for x in day:
-                    if not inRange(fromm, to, datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d')):
-                        continue;
-                    data.add(datetime.utcfromtimestamp(x + 946684800).strftime('%Y-%m-%d'))
-            line = (str(user["key"]), user["value"]['name'])
-            for day in days:
-                if day in data:
-                    line += ("Ja",)
-                else:
-                    line += ("Nein",)
+        writer.writerow(['Index', 'Name'] + sorted_days)
+        for row in rows:
+            line = [str(row["id"]), row["name"]] + \
+                   ["Ja" if d in row["days"] else "Nein" for d in sorted_days]
             writer.writerow(line)
 
     return send_file("students.csv", as_attachment=True)
@@ -520,7 +516,7 @@ def scan():
         scanner["id"] = json.loads(data);
         print("something")
     else:
-        r = requests.post(IP + "/scanned", json={"rfid": json.loads(data)})
+        r = hmac_client.post(IP + "/scanned", json_body={"rfid": json.loads(data)})
         print(r)
     return "idk bro"
 
@@ -528,11 +524,10 @@ def scan():
 @app.route("/station_scan", methods=["POST"])
 def station_scan():
     data = flask.request.get_data()
-    r = requests.post(IP + "/login", json={"rfid": json.loads(data)})
+    r = hmac_client.post(IP + "/login", json_body={"rfid": json.loads(data)})
     print(r.text)
     return r.text
 
 
 if __name__ == "__main__":
     app.run(port=8080, host="0.0.0.0", debug=True)
-

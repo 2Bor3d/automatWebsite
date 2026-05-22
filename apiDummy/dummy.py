@@ -58,10 +58,25 @@ def mint():
 def users():
     with open("users.json", "r") as read:
         return json.load(read);
+    print(flask.request.headers);
+    print(flask.request.content_type)
+
+@app.route("/head", methods=["GET"])
+def head():
+    print(flask.request.headers);
+    print(flask.request.content_type)
+    with open("data.json", "r") as read:
+        data = json.load(read)
+        for k in range(len(data["people"])):
+            if data["people"][k]["number"] == int(flask.request.content_type):
+                data["people"][k]["attended"].append([796314470, 796314470])
+    json.dump(data, open("data.json", "w"));
+    return ":)"
 
 
 @app.route("/data", methods=["GET"])
 def data():
+    #print(flask.request.json);
     with open("data.json", "r") as read:
         return json.load(read);
 
@@ -103,4 +118,4 @@ def scan():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run( host="0.0.0.0", port=5000);
