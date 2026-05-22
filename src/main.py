@@ -337,11 +337,32 @@ def add_student():
 
 @app.route("/add_teacher", methods=["POST"])
 def add_teacher():
-    if checkAuth(flask.request.cookies.get("auth")):
-        if logedin[flask.request.cookies.get("auth")]["admin"]:
-            r = _call("post", IP + "/teacher/addTeacher", json_body=flask.request.get_json());
-            if r is None: return "fail"
-            return "success";
+    global scanner;
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return "fail"
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return "fail"
+
+    data = flask.request.get_json();
+    rfid_field = data.pop("rfid", None)
+
+    scanned_rfid = []
+    if rfid_field == "true":
+        scanner["active"] = True;
+        for i in range(100):
+            if scanner["id"] != []:
+                scanned_rfid = scanner["id"];
+                scanner = {"active": False, "id": []};
+                break;
+            else:
+                time.sleep(0.1);
+    elif isinstance(rfid_field, list):
+        scanned_rfid = rfid_field
+
+    data["rfid"] = scanned_rfid;
+    r = _call("post", IP + "/teacher/addTeacher", json_body=data);
+    if r is None: return "fail"
+    return "success";
 
 
 @app.route("/add_user", methods=["POST"])
@@ -453,10 +474,33 @@ def delete_course():
     return "fail";
 
 
+GENDERS = [
+    "ABINARY","AGENDER","AGENDERFLUID","AGENDERFLUX","GENDERBLANK","GENDERFREE",
+    "POLYAGENDER","AMBIGENDER","ANDROGYNE","ANDROGYNOUS","APORAGENDER","AUTIGENDER",
+    "BAKLA","BIGENDER","BINARY","BISSU","BUTCH","CALABAI","CALALAI","CIS","CISGENDER",
+    "CIS_FEMALE","CIS_MALE","CIS_MAN","CIS_WOMAN","DEMI_BOY","DEMIFLUX","DEMIGENDER",
+    "DEMI_GIRL","DEMI_GUY","DEMI_MAN","DEMI_WOMAN","DUAL_GENDER","EUNUCH","FA_AFAFINE",
+    "FEMALE","FEMALE_TO_MALE","FEMME","FTM","F14TOMCAT","GENDER_BENDER","GENDER_DIVERSE",
+    "GENDER_GIFTED","GENDERFAE","GENDERFLUID","GENDERFLUX","GENDERFUCK","GENDERLESS",
+    "GENDER_NONCONFORMING","GENDERQUEER","GENDER_QUESTIONING","GENDER_VARIANT","GRAYGENDER",
+    "HIJRA","HELICOPTER","INTERGENDER","INTERSEX","IPSOGENDER","KATHOEY","MAHU","MALE",
+    "MALE_TO_FEMALE","MAN","MAN_OF_TRANS_EXPERIENCE","MAVERIQUE","META_GENDER","MTF",
+    "MULTIGENDER","MUXE","NEITHER","NEUROGENDER","NEUTROIS","NON_BINARY",
+    "NON_BINARY_TRANSGENDER","OMNIGENDER","OTHER","PANGENDER",
+    "PERSON_OF_TRANSGENDERED_EXPERIENCE","POLYGENDER","QUEER","SEKHET","THIRD_GENDER",
+    "TRANS","TRANS_FEMALE","TRANS_MALE","TRANS_MAN","TRANS_PERSON","TRANS_WOMAN",
+    "TRANSGENDER","TRANSGENDER_FEMALE","TRANSGENDER_MALE","TRANSGENDER_MAN",
+    "TRANSGENDER_PERSON","TRANSGENDER_WOMAN","TRANSFEMININE","TRANSMASELINE","TRANSSEXUAL",
+    "TRANSSEXUAL_FEMALE","TRANSSEXUAL_MALE","TRANSSEXUAL_MAN","TRANSSEXUAL_PERSON",
+    "TRANSSEXUAL_WOMAN","TRAVESTI","TRIGENDER","TUMTUM","TWO_SPIRIT","VAKASALEWALEWA",
+    "WARIA","WINKTE","WOMAN","WOMAN_OF_TRANS_EXPERIENCE","X_GENDER","X_JENDA","XENOGENDER",
+    "YAOI","YAOIGENDER","YURI","YURIGENDER","ZENGENDER",
+]
+
 @app.route("/genders", methods=["POST"])
 def genders():
     if checkAuth(flask.request.cookies.get("auth")):
-        return [];
+        return GENDERS;
     return "n/a";
 
 
