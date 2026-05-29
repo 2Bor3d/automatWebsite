@@ -79,3 +79,42 @@
 #delete {
 	background-color: #ff0000;
 }
+
+#kurs-select {
+	display: flex;
+	flex-direction: column;
+	width: 200px;
+}
+
+#kurs-search {
+	padding: 4px 6px;
+	border: 1px solid #bbb;
+	border-bottom: none;
+	border-radius: 3px 3px 0 0;
+	font-size: 0.9em;
+}
+
+#kurs-options {
+	border: 1px solid #bbb;
+	border-radius: 0 0 3px 3px;
+	max-height: 160px;
+	overflow-y: auto;
+	background: #fff;
+}
+
+.kurs-option {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+}
+
+.kurs-option:hover {
+	background-color: #e8e8f8;
+}
+
+.kurs-option label {
+	cursor: pointer;
+	user-select: none;
+	font-size: 0.9em;
+}

@@ -29,7 +29,7 @@
                 <option value="MONDTAG">Montag</option>
                 <option value="DEINSTAG">Dienstag</option>
                 <option value="METTWOCH">Mittwoch</option>
-                <option value="DÖNERTAG">Donnerstag</option>
+                <option value="DÖNNERSTAG">Donnerstag</option>
                 <option value="REINTAG">Freitag</option>
                 <option value="SAUFTAG">Samstag</option>
                 <option value="SONNDAG">Sonntag</option>
@@ -41,11 +41,15 @@
 			</div>
             <div class="row">
                 <p class="lable">Lehrkräfte: </p>
-                <input id="users">
+                <div id="user-select">
+                    <input id="user-search" type="text" placeholder="Suchen…" autocomplete="off">
+                    <div id="user-options"></div>
+                </div>
             </div>
 			<div class="row">
 				<button id="save">Speichern</button>
 				<button id="delete">Löschen</button>
+			</div>
 		</div>
 	</body>
 </html>

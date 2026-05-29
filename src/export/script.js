@@ -10,10 +10,10 @@ function load() {
         response.json().then((json) => {
             console.log(json);
             let opt;
-            Object.keys(json).forEach((t, index, array) => {
+            Object.keys(json["courses"]).forEach((id) => {
                     opt = document.createElement('option');
-                    opt.value = t;
-                    opt.text = t;
+                    opt.value = id;
+                    opt.text = json["courses"][id]["name"];
                     document.getElementById("course").appendChild(opt);
             })
         });

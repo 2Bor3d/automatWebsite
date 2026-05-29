@@ -9,17 +9,18 @@ async function send(address, dict) {
 
 function closePopup() {
 	document.getElementById("popup").classList.add("hidden");
+	document.getElementById("user-search").value = "";
 }
 
 function save(id) {
 	name = document.getElementById("name").value;
 	day = document.getElementById("day").value;
 	students = document.getElementById("students").value;
-    users = document.getElementById("users").value;
-    console.log({ "old": id, "name": name, "day": day, "students": students });
 
-	send("/change_course",
-		{ old: id, name: name, day: day, students: students, users: users });
+	const checked = document.querySelectorAll('#user-options input[type="checkbox"]:checked');
+	users = Array.from(checked).map(cb => cb.value).join(",");
+
+	send("/change_course", { old: id, name: name, day: day, students: students, users: users });
 }
 
 function deleteUser(id) {
@@ -28,33 +29,57 @@ function deleteUser(id) {
 	}
 }
 
-function popup(id) {
-	fetch("/courses", {
-		method: "POST",
-	}).then((response) => {
-		response.json().then((json) => {
-			Object.keys(json["courses"]).forEach((element) => {
-				if (element == id) {
-					div = document.getElementById("popup");
-					div.classList.remove("hidden");
+function buildUserSelect(allUsers, selectedIds) {
+	const container = document.getElementById("user-options");
+	container.innerHTML = "";
+	allUsers.forEach(user => {
+		const div = document.createElement("div");
+		div.className = "user-option";
 
-					document.getElementById("name").value = 
-                        json["courses"][element]["name"];
-					document.getElementById("day").value = 
-                        json["courses"][element]["day"];
-					document.getElementById("students").value = 
-                        json["courses"][element]["students"];
-                    document.getElementById("users").value = 
-                        json["courses"][element]["users"];
+		const cb = document.createElement("input");
+		cb.type = "checkbox";
+		cb.id = `user-cb-${user.id}`;
+		cb.value = user.id;
+		cb.checked = selectedIds.includes(String(user.id));
 
-					document.getElementById("save")
-						.setAttribute("onclick", `save('${id}')`);
-					document.getElementById("delete")
-						.setAttribute("onclick", `deleteUser('${id}')`);
-				}
-			});
+		const label = document.createElement("label");
+		label.htmlFor = `user-cb-${user.id}`;
+		label.textContent = user.firstName + " " + user.lastName;
+
+		div.appendChild(cb);
+		div.appendChild(label);
+		container.appendChild(div);
+	});
+
+	document.getElementById("user-search").oninput = function() {
+		const term = this.value.toLowerCase();
+		container.querySelectorAll(".user-option").forEach(el => {
+			el.style.display = el.querySelector("label").textContent.toLowerCase().includes(term) ? "" : "none";
 		});
-	})
+	};
+}
+
+async function popup(id) {
+	const [coursesRes, usersRes] = await Promise.all([
+		fetch("/courses", { method: "POST" }),
+		fetch("/get_users", { method: "POST" }),
+	]);
+	const coursesJson = await coursesRes.json();
+	const allUsers = await usersRes.json();
+
+	const course = coursesJson["courses"][id];
+	if (!course) return;
+
+	document.getElementById("popup").classList.remove("hidden");
+	document.getElementById("name").value = course["name"];
+	document.getElementById("day").value = course["day"];
+	document.getElementById("students").value = course["students"];
+
+	const selectedIds = course["users"] ? course["users"].split(",").filter(x => x) : [];
+	buildUserSelect(allUsers, selectedIds);
+
+	document.getElementById("save").setAttribute("onclick", `save('${id}')`);
+	document.getElementById("delete").setAttribute("onclick", `deleteUser('${id}')`);
 }
 
 function load() {

@@ -3,7 +3,6 @@ function load() {
         method: "POST"
     }).then((response) => {
         response.json().then((json) => {
-            console.log(json)
             element = document.getElementById("gender");
             json.forEach((gender) => {
                 opt = document.createElement("option");
@@ -13,19 +12,35 @@ function load() {
             });
         });
     });
+
+    fetch("/courses", {
+        method: "POST"
+    }).then((response) => {
+        response.json().then((json) => {
+            const sel = document.getElementById("kurs");
+            if (!sel) return;
+            Object.keys(json["courses"]).forEach((id) => {
+                const opt = document.createElement("option");
+                opt.value = id;
+                opt.text = json["courses"][id]["name"];
+                sel.appendChild(opt);
+            });
+        });
+    });
 }
 
 function change_type() {
     type = document.getElementById("type").value;
-    console.log(type)
     if (type=="ADMIN" || type=="TEACHER") {
         for (const element of document.getElementsByClassName("admin")) {
             element.classList.remove("hidden");
-        };
+        }
+        document.getElementById("kurs-field").style.display = "none";
     } else {
         for (const element of document.getElementsByClassName("admin")) {
             element.classList.add("hidden");
-        };
+        }
+        document.getElementById("kurs-field").style.display = "";
     }
 }
 
@@ -37,7 +52,7 @@ function submit() {
 
     firstName = document.getElementById("firstName").value;
     lastName = document.getElementById("lastName").value;
-    rfid = document.getElementById("rfid").checked ? "false" : "true";
+    rfid = document.getElementById("rfid").checked ? "true" : "false";
     gender = document.getElementById("gender").value;
     birthday = new Date(document.getElementById("birthday").value).getTime();
     nr = parseInt(document.getElementById("nr").value);
@@ -69,18 +84,22 @@ function submit() {
                     "country": country,
                 },
                 "email": email,
-                "password": password
+                "password": password,
+                "level": level,
             }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
             }
-
         }).then((response) => {
-            if (response.text == "success") {
-                document.getElementById("message").text = "Erfolgreich hinzugefügt!";
-            }
+            response.text().then((text) => {
+                if (text == "success") {
+                    document.getElementById("message").innerText = "Erfolgreich hinzugefügt!";
+                }
+            });
         });
     } else {
+        const kursEl = document.getElementById("kurs");
+        const kurse = kursEl && kursEl.value ? [parseInt(kursEl.value)] : [];
         fetch("/add_student", {
             method: "POST",
             body: JSON.stringify({
@@ -96,14 +115,13 @@ function submit() {
                     "zip": zip,
                     "country": country,
                 },
-                "kurse": [1]
+                "kurse": kurse
             }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
             }
         }).then((response) => {
-            response.text().then((text) => {;
-                console.log(text)
+            response.text().then((text) => {
                 if (text == "success") {
                     document.getElementById("message").innerText = "Erfolgreich hinzugefügt!";
                 }

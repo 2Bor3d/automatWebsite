@@ -48,8 +48,7 @@ function submitF() {
             return;
         }
         if (document.getElementById("user").value === "none") {
-            console.log(document.getElementById("courses").value);
-            noContent("Kurs");
+            noContent("Lehrkraft");
             return;
         }
         document.getElementById("form").submit();

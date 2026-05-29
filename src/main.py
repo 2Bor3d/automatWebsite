@@ -67,6 +67,7 @@ def format_for_list(entry: dict, attendances: list) -> dict:
         "attendence": last_attendance_date(attendances),
         "balance": student_balance(entry),
         "warning": False,
+        "kurse": [k["id"] for k in entry.get("kurse", [])],
     }
 
 
@@ -390,6 +391,10 @@ def change_user():
             "lastName": parts[1] if len(parts) > 1 else "",
         }
         _call("post", IP + "/student/modify", json_body=patch);
+
+    if logedin[flask.request.cookies.get("auth")]["admin"] and changes.get("courses") is not None:
+        kurse = [int(x) for x in changes["courses"] if x != ""]
+        _call("post", IP + "/student/modify", json_body={"id": student_id, "kurse": kurse})
 
     if changes.get("date") is not None and changes["date"] != 0:
         ts_sec = int(changes["date"]);
