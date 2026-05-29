@@ -1,0 +1,78 @@
+.hidden {
+	display: none;
+}
+
+#table {
+	border: 0;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+#table td, #table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#table tr:nth-child(even) {
+	background-color: #e0e0f0;
+}
+
+#table tr:first-child td, #table tr:first-child th {
+	border-top: none;
+}
+
+#table tr:last-child td, #table tr:last-child th {
+	border-bottom: none;
+}
+
+#table tr td:first-child, #table tr th:first-child {
+	border-left: none;
+}
+
+#table tr td:last-child, #table tr th:last-child {
+	border-right: none;
+}
+
+#popup {
+	background-color: #f0f0f0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 10;
+	padding: 20px;
+	min-width: 360px;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+}
+
+.lable {
+	min-width: 90px;
+	margin: 0;
+}
+
+#address-block {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+#address-block input {
+	width: 100px;
+}
+
+#delete {
+	background-color: #ff0000;
+	color: #fff;
+}
+
+#message {
+	color: green;
+	margin-top: 8px;
+}

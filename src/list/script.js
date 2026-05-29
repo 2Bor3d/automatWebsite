@@ -78,13 +78,36 @@ function save(id) {
 	const checked = document.querySelectorAll('#kurs-options input[type="checkbox"]:checked');
 	const courses = Array.from(checked).map(cb => cb.value);
 
-	send("/change_user",
-		{ "id": id,
-          "name": name,
-          "balance": balance,
-          "date": date,
-          "attendance": attendance,
-          "courses": courses });
+	const gender = document.getElementById("gender") ? document.getElementById("gender").value : null;
+	const birthdayVal = document.getElementById("birthday") ? document.getElementById("birthday").value : null;
+	const birthday = birthdayVal ? new Date(birthdayVal).getTime() : null;
+
+	const wohnort = {
+		nr: parseInt(document.getElementById("addr-nr").value) || 0,
+		street: document.getElementById("addr-street").value,
+		city: document.getElementById("addr-city").value,
+		zip: parseInt(document.getElementById("addr-zip").value) || 0,
+		country: document.getElementById("addr-country").value,
+	};
+	const wohnortId = document.getElementById("addr-nr").dataset.wohnortId;
+	if (wohnortId) wohnort.id = parseInt(wohnortId);
+
+	const rfidScan = document.getElementById("rfid-scan") && document.getElementById("rfid-scan").checked;
+
+	const payload = {
+		"id": id,
+		"name": name,
+		"hours": parseFloat(balance),
+		"date": date,
+		"attendance": attendance,
+		"courses": courses,
+		"gender": gender,
+		"birthday": birthday,
+		"wohnort": wohnort,
+	};
+	if (rfidScan) payload["rfid"] = "scan";
+
+	send("/change_user", payload);
     closePopup();
     location.reload();
 }
@@ -97,15 +120,17 @@ function deleteUser(id) {
 }
 
 async function popup(id) {
-    const [usernameRes, studentsRes, coursesRes] = await Promise.all([
+    const [usernameRes, studentsRes, coursesRes, gendersRes] = await Promise.all([
         fetch("/username", {method: "POST"}),
         fetch("/all_students", {method: "POST"}),
         fetch("/courses", {method: "POST"}),
+        fetch("/genders", {method: "POST"}),
     ]);
     username = await usernameRes.json();
     const students = await studentsRes.json();
     const coursesJson = await coursesRes.json();
     const allCourses = coursesJson["courses"] || {};
+    const genders = await gendersRes.json();
 
     const student = students.find(s => s.id == id);
     if (!student) return;
@@ -117,6 +142,34 @@ async function popup(id) {
     document.getElementById("attendanceDate").value = student.attendence;
     document.getElementById("balance").value = student.balance;
 
+    const genderSel = document.getElementById("gender");
+    genderSel.innerHTML = "";
+    genders.forEach(g => {
+        const opt = document.createElement("option");
+        opt.value = g; opt.text = g;
+        if (g === student.gender) opt.selected = true;
+        genderSel.appendChild(opt);
+    });
+
+    if (student.birthday) {
+        const bd = new Date(student.birthday);
+        const yyyy = bd.getUTCFullYear();
+        const mm = String(bd.getUTCMonth() + 1).padStart(2, "0");
+        const dd = String(bd.getUTCDate()).padStart(2, "0");
+        document.getElementById("birthday").value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    const w = student.wohnort || {};
+    document.getElementById("addr-nr").value = w.nr || "";
+    document.getElementById("addr-street").value = w.street || "";
+    document.getElementById("addr-city").value = w.city || "";
+    document.getElementById("addr-zip").value = w.zip || "";
+    document.getElementById("addr-country").value = w.country || "";
+    if (w.id) document.getElementById("addr-nr").dataset.wohnortId = w.id;
+
+    document.getElementById("rfid-display").textContent = (student.rfid || []).join(", ");
+    if (document.getElementById("rfid-scan")) document.getElementById("rfid-scan").checked = false;
+
     document.getElementById("save").setAttribute("onclick", `save('${id}')`);
     document.getElementById("delete").setAttribute("onclick", `deleteUser('${id}')`);
 
@@ -126,9 +179,9 @@ async function popup(id) {
         document.getElementById("firstName").removeAttribute("disabled");
         document.getElementById("lastName").removeAttribute("disabled");
         document.getElementById("delete").removeAttribute("disabled");
-        document.querySelector(".admin-field").style.display = "";
+        document.querySelectorAll(".admin-field").forEach(el => el.style.display = "");
     } else {
-        document.querySelector(".admin-field").style.display = "none";
+        document.querySelectorAll(".admin-field").forEach(el => el.style.display = "none");
     }
 }
 

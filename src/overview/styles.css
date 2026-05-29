@@ -97,3 +97,42 @@
 	user-select: none;
 	font-size: 0.9em;
 }
+
+#student-select {
+	display: flex;
+	flex-direction: column;
+	width: 200px;
+}
+
+#student-search {
+	padding: 4px 6px;
+	border: 1px solid #bbb;
+	border-bottom: none;
+	border-radius: 3px 3px 0 0;
+	font-size: 0.9em;
+}
+
+#student-options {
+	border: 1px solid #bbb;
+	border-radius: 0 0 3px 3px;
+	max-height: 160px;
+	overflow-y: auto;
+	background: #fff;
+}
+
+.student-option {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+}
+
+.student-option:hover {
+	background-color: #e8e8f8;
+}
+
+.student-option label {
+	cursor: pointer;
+	user-select: none;
+	font-size: 0.9em;
+}

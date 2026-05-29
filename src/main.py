@@ -68,6 +68,10 @@ def format_for_list(entry: dict, attendances: list) -> dict:
         "balance": student_balance(entry),
         "warning": False,
         "kurse": [k["id"] for k in entry.get("kurse", [])],
+        "gender": entry.get("gender", ""),
+        "birthday": entry.get("birthday", 0),
+        "rfid": entry.get("rfid", []),
+        "wohnort": entry.get("wohnort", {}),
     }
 
 
@@ -152,8 +156,8 @@ def login():
 
     response = flask.make_response("wrong username or password", 401)
     for user in users:
-        print(bcrypt.checkpw(attempt["password"].encode(), user["password"].encode()))
-        if user["mail"] == attempt["username"] and "123" == attempt["password"]:
+        pw_ok = bcrypt.checkpw(attempt["password"].encode(), user["password"].encode())
+        if user["mail"] == attempt["username"] and pw_ok:
             tutor_id = user["id"]
             courses_user = [c for c in courses_file
                             if any(t["id"] == tutor_id for t in c.get("tutor", []))]
@@ -195,10 +199,9 @@ def username():
 @app.route("/move", methods=["POST"])
 def move():
     if checkAuth(flask.request.cookies.get("auth")):
-        logedin[flask.request.cookies.get("auth")]["position"] = \
-            flask.request.get_json()["position"];
-        logedin[flask.request.cookies.get("auth")]["sub"] = \
-            flask.request.get_json()["sub"];
+        body = flask.request.get_json()
+        logedin[flask.request.cookies.get("auth")]["position"] = body["position"]
+        logedin[flask.request.cookies.get("auth")]["sub"] = body.get("sub", {})
         return flask.make_response("success");
     else:
         return flask.make_response("authorisation failed"), 401
@@ -295,9 +298,22 @@ def courses():
                 "name": course["name"],
                 "day": course["day"],
                 "tutor": course.get("tutor", []),
-                "students": "",
+                "participants": [],
                 "users": ",".join(str(t["id"]) for t in course.get("tutor", [])),
             }
+
+        r2 = _call("get", IP + "/student/allStudents")
+        if r2 is not None:
+            for s in json.loads(r2.text)["students"]:
+                for k in s.get("kurse", []):
+                    cid = str(k["id"])
+                    if cid in courses_dict:
+                        courses_dict[cid]["participants"].append({
+                            "id": s["id"],
+                            "firstName": s["firstName"],
+                            "lastName": s["lastName"],
+                        })
+
         return {"courses": courses_dict}
     return flask.make_response("authorisation failed"), 401
 
@@ -366,35 +382,100 @@ def add_teacher():
     return "success";
 
 
-@app.route("/add_user", methods=["POST"])
-def add_user():
-    if checkAuth(flask.request.cookies.get("auth")):
-        if logedin[flask.request.cookies.get("auth")]:
-            print(flask.request.get_json())
-            print(flask.request.form)
-    return "fail";
+@app.route("/change_teacher", methods=["POST"])
+def change_teacher():
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return "fail"
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return "fail"
+
+    changes = flask.request.get_json()
+    teacher = {
+        "id": int(changes["id"]),
+        "firstName": changes.get("firstName", ""),
+        "lastName": changes.get("lastName", ""),
+        "rfid": changes.get("rfid", []),
+        "gender": changes.get("gender", ""),
+        "birthday": int(changes.get("birthday") or 0),
+        "wohnort": changes.get("wohnort", {}),
+        "mail": changes.get("mail", ""),
+        "level": changes.get("level", "NORMAL"),
+        "password": changes.get("passwordHash", ""),
+    }
+    if changes.get("newPassword"):
+        hashed = bcrypt.hashpw(changes["newPassword"].encode(), bcrypt.gensalt()).decode()
+        teacher["password"] = hashed
+
+    r = _call("post", IP + "/teacher/modify", json_body=teacher)
+    if r is not None:
+        return "success"
+    return "fail"
+
+
+@app.route("/delete_teacher", methods=["POST"])
+def delete_teacher():
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return "fail"
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return "fail"
+
+    teacher_id = flask.request.get_json()["id"]
+    r = _call("delete", IP + "/teacher/delete", json_body={"id": int(teacher_id)})
+    if r is not None and r.status_code == 200:
+        return "success"
+    return "fail"
 
 
 @app.route("/change_user", methods=["POST"])
 def change_user():
+    global scanner
     if not checkAuth(flask.request.cookies.get("auth")):
         return "fail"
 
     changes = flask.request.get_json();
     student_id = int(changes["id"]);
 
-    if logedin[flask.request.cookies.get("auth")]["admin"] and changes.get("name"):
-        parts = changes["name"].split(" ", 1);
-        patch = {
-            "id": student_id,
-            "firstName": parts[0],
-            "lastName": parts[1] if len(parts) > 1 else "",
-        }
-        _call("post", IP + "/student/modify", json_body=patch);
+    rfid_field = changes.get("rfid")
+    if rfid_field == "scan":
+        scanner["active"] = True
+        for _ in range(100):
+            if scanner["id"] != []:
+                changes["rfid"] = scanner["id"]
+                scanner = {"active": False, "id": []}
+                break
+            else:
+                time.sleep(0.1)
+        else:
+            changes.pop("rfid", None)
 
-    if logedin[flask.request.cookies.get("auth")]["admin"] and changes.get("courses") is not None:
-        kurse = [int(x) for x in changes["courses"] if x != ""]
-        _call("post", IP + "/student/modify", json_body={"id": student_id, "kurse": kurse})
+    if logedin[flask.request.cookies.get("auth")]["admin"]:
+        if changes.get("name"):
+            parts = changes["name"].split(" ", 1)
+            patch = {
+                "id": student_id,
+                "firstName": parts[0],
+                "lastName": parts[1] if len(parts) > 1 else "",
+            }
+            _call("post", IP + "/student/modify", json_body=patch)
+
+        if changes.get("courses") is not None:
+            kurse = [int(x) for x in changes["courses"] if x != ""]
+            _call("post", IP + "/student/modify", json_body={"id": student_id, "kurse": kurse})
+
+        demo_patch = {"id": student_id}
+        if changes.get("gender"):
+            demo_patch["gender"] = changes["gender"]
+        if changes.get("birthday") and int(changes["birthday"]) > 0:
+            demo_patch["birthday"] = int(changes["birthday"])
+        if changes.get("wohnort"):
+            demo_patch["wohnort"] = changes["wohnort"]
+        if isinstance(changes.get("rfid"), list) and len(changes["rfid"]) > 0:
+            demo_patch["rfid"] = changes["rfid"]
+        if len(demo_patch) > 1:
+            _call("post", IP + "/student/modify", json_body=demo_patch)
+
+        if changes.get("hours") is not None:
+            _call("post", IP + "/student/modify", json_body={"id": student_id, "hours": float(changes["hours"])})
 
     if changes.get("date") is not None and changes["date"] != 0:
         ts_sec = int(changes["date"]);
@@ -420,9 +501,21 @@ def delete_user():
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             user_id = flask.request.get_json()["id"];
             r = _call("delete", IP + "/student/delete", json_body={"id": int(user_id)});
-            if r.status_code == 200:
+            if r is not None and r.status_code == 200:
                 return "success";
     return "fail"
+
+
+@app.route("/student_names", methods=["POST"])
+def student_names():
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return flask.make_response("authorisation failed"), 401
+    r = _call("get", IP + "/student/allStudents")
+    if r is None: return flask.make_response("backend unavailable", 503)
+    students = json.loads(r.text)["students"]
+    return [{"id": s["id"], "firstName": s["firstName"], "lastName": s["lastName"]} for s in students]
 
 
 @app.route("/get_users", methods=["POST"])
@@ -454,18 +547,61 @@ def add_course():
 
 @app.route("/change_course", methods=["POST"])
 def change_course():
-    if checkAuth(flask.request.cookies.get("auth")):
-        if logedin[flask.request.cookies.get("auth")]["admin"]:
-            changes = flask.request.get_json();
-            patch = {"id": int(changes["old"])};
-            if changes.get("name"):
-                patch["name"] = changes["name"];
-            if changes.get("day"):
-                patch["day"] = changes["day"];
-            r = _call("post", IP + "/course/modify", json_body=patch);
-            if r is not None:
-                return "success";
-    return "fail"
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return "fail"
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return "fail"
+
+    changes = flask.request.get_json()
+    course_id = int(changes["old"])
+
+    patch = {"id": course_id}
+    if changes.get("name"):
+        patch["name"] = changes["name"]
+    if changes.get("day"):
+        patch["day"] = changes["day"]
+    if len(patch) > 1:
+        _call("post", IP + "/course/modify", json_body=patch)
+
+    new_tutor_ids = set()
+    if changes.get("users"):
+        new_tutor_ids = {str(x).strip() for x in str(changes["users"]).split(",") if x.strip()}
+
+    r = _call("get", IP + "/course/allCourses")
+    current_tutor_ids = set()
+    if r is not None:
+        for c in json.loads(r.text)["courses"]:
+            if c["id"] == course_id:
+                current_tutor_ids = {str(t["id"]) for t in c.get("tutor", [])}
+                break
+
+    for tid in new_tutor_ids - current_tutor_ids:
+        _call("post", IP + "/course/modify", json_body={"id": course_id, "addTeacher": str(tid)})
+    for tid in current_tutor_ids - new_tutor_ids:
+        _call("post", IP + "/course/modify", json_body={"id": course_id, "removeTeacher": str(tid)})
+
+    if "students" in changes:
+        new_student_ids = {int(x) for x in (changes["students"] or []) if x != ""}
+        r2 = _call("get", IP + "/student/allStudents")
+        if r2 is not None:
+            all_students = json.loads(r2.text)["students"]
+            student_map = {s["id"]: s for s in all_students}
+            current_student_ids = {
+                s["id"] for s in all_students
+                if any(k["id"] == course_id for k in s.get("kurse", []))
+            }
+            for sid in new_student_ids - current_student_ids:
+                if sid in student_map:
+                    kurse = [k["id"] for k in student_map[sid].get("kurse", [])]
+                    if course_id not in kurse:
+                        kurse.append(course_id)
+                    _call("post", IP + "/student/modify", json_body={"id": sid, "kurse": kurse})
+            for sid in current_student_ids - new_student_ids:
+                if sid in student_map:
+                    kurse = [k["id"] for k in student_map[sid].get("kurse", []) if k["id"] != course_id]
+                    _call("post", IP + "/student/modify", json_body={"id": sid, "kurse": kurse})
+
+    return "success"
 
 
 @app.route("/delete_course", methods=["POST"])
@@ -474,7 +610,7 @@ def delete_course():
         if logedin[flask.request.cookies.get("auth")]["admin"]:
             course_id = flask.request.get_json()["id"];
             r = _call("delete", IP + "/course/delete", json_body={"id": int(course_id)});
-            if r.status_code == 200:
+            if r is not None and r.status_code == 200:
                 return "success";
     return "fail";
 
@@ -536,8 +672,14 @@ def inRange(fromm, to, x):
 
 @app.route("/csv", methods=["POST"])
 def csv():
-    fromm = flask.request.form["from"]
-    to = flask.request.form["to"]
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return flask.make_response("authorisation failed"), 401
+
+    fromm = flask.request.form.get("from", "")
+    to = flask.request.form.get("to", "")
+    course_filter = flask.request.form.get("course", "all")
 
     file_path = "students.csv"
     if os.path.exists(file_path):
@@ -547,6 +689,14 @@ def csv():
     if r is None: return flask.make_response("backend unavailable", 503)
     students = json.loads(r.text)["students"];
     students.sort(key=lambda s: s["id"])
+
+    if course_filter not in ("all", "", "-1", "All"):
+        try:
+            cid = int(course_filter)
+            students = [s for s in students
+                        if any(k["id"] == cid for k in s.get("kurse", []))]
+        except ValueError:
+            pass
 
     all_days = set()
     rows = []
