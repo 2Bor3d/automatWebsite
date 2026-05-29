@@ -122,3 +122,24 @@
 	user-select: none;
 	font-size: 0.9em;
 }
+
+.day-square {
+	display: inline-block;
+	width: 13px;
+	height: 13px;
+	margin: 1px;
+	border-radius: 2px;
+	cursor: default;
+}
+
+.day-square.present {
+	background-color: #c0392b;
+}
+
+.day-square.away {
+	background-color: #e67e22;
+}
+
+.day-square.absent {
+	background-color: #d5d5d5;
+}

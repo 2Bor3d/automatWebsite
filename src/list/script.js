@@ -223,6 +223,16 @@ function load() {
 				time.appendChild(document.createTextNode(value.balance));
 				tr.appendChild(time);
 
+				const daysTd = document.createElement("td");
+				daysTd.style.whiteSpace = "nowrap";
+				(value.recent_days || []).forEach(day => {
+					const sq = document.createElement("span");
+					sq.className = "day-square " + day.status;
+					sq.title = day.date;
+					daysTd.appendChild(sq);
+				});
+				tr.appendChild(daysTd);
+
 				punish_button = document.createElement("td");
 				button = document.createElement("button");
 				button.setAttribute("onclick", `popup(${value.id})`);

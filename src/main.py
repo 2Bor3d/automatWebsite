@@ -5,7 +5,7 @@ import hmac_client
 import base64
 import os
 import csv as csvBib
-from datetime import datetime;
+from datetime import datetime, date as Date, timedelta
 from flask import send_file
 import bcrypt
 import time
@@ -59,6 +59,20 @@ def student_balance(entry: dict) -> float:
     return hours[0] if hours else 0
 
 
+def recent_attendance(attendances: list) -> list:
+    today = Date.today()
+    result = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        status = "absent"
+        for a in attendances:
+            if a["year"] == d.year and a["month"] == d.month and a["day"] == d.day:
+                status = "away" if a.get("type") == "AWAY" else "present"
+                break
+        result.append({"date": f"{d.year}-{d.month:02d}-{d.day:02d}", "status": status})
+    return result
+
+
 def format_for_list(entry: dict, attendances: list) -> dict:
     return {
         "id": entry["id"],
@@ -72,6 +86,7 @@ def format_for_list(entry: dict, attendances: list) -> dict:
         "birthday": entry.get("birthday", 0),
         "rfid": entry.get("rfid", []),
         "wohnort": entry.get("wohnort", {}),
+        "recent_days": recent_attendance(attendances),
     }
 
 
@@ -496,7 +511,7 @@ def change_user():
             "month": dt.month,
             "year": dt.year,
             "login": ts_sec * 1000,
-            "logout": (ts_sec + 7200) * 1000,
+            "logout": ts_sec * 1000 + 1000,
             "type": att_type,
         }
         _call("post", IP + "/seed/attendance", json_body=att_body);
@@ -648,28 +663,9 @@ def genders():
 
 
 def inRange(fromm, to, x):
-    if fromm == '':
-        fromm = "0000-00-00";
-    if to == '':
-        to = "9999-99-99";
-    fromm = str(fromm).split("-")
-    to = str(to).split("-")
-    x = str(x).split("-")
-    if len(fromm) != 3 or len(to) != 3 or len(x) != 3:
-        return False;
-    if int(fromm[0]) > int(x[0]):
-        return False;
-    elif int(fromm[1]) > int(x[1]):
-        return False;
-    elif int(fromm[2]) > int(x[2]):
-        return False;
-    if int(to[0]) < int(x[0]):
-        return False;
-    elif int(to[1]) < int(x[1]):
-        return False;
-    elif int(to[2]) < int(x[2]):
-        return False;
-    return True
+    f = str(fromm) if fromm != '' else "0000-00-00"
+    t = str(to) if to != '' else "9999-99-99"
+    return f <= str(x) <= t
 
 
 @app.route("/csv", methods=["POST"])
