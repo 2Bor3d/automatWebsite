@@ -65,7 +65,7 @@ function buildKursSelect(allCourses, selectedIds) {
 	};
 }
 
-function save(id) {
+async function save(id) {
 	firstName = document.getElementById("firstName").value;
 	lastName = document.getElementById("lastName").value;
 	name = firstName + " " + lastName;
@@ -107,15 +107,24 @@ function save(id) {
 	};
 	if (rfidScan) payload["rfid"] = "scan";
 
-	send("/change_user", payload);
+	await fetch("/change_user", {
+		method: "POST",
+		body: JSON.stringify(payload),
+		headers: { "content-type": "application/json; charset=UTF-8" },
+	});
     closePopup();
     location.reload();
 }
 
-function deleteUser(id) {
+async function deleteUser(id) {
 	if (confirm("Wollen Sie diesen Account wirklich löschen?\nAlle Daten werden restlos gelöscht")) {
-		send("/delete_user", { "id": id });
+		await fetch("/delete_user", {
+			method: "POST",
+			body: JSON.stringify({ "id": id }),
+			headers: { "content-type": "application/json; charset=UTF-8" },
+		});
         closePopup();
+        location.reload();
 	}
 }
 
