@@ -69,11 +69,15 @@
 
 #popup {
 	background-color: #f0f0f0;
-	position: absolute;
+	position: fixed;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	z-index: 10; 
+	z-index: 10;
+	max-height: 90vh;
+	overflow-y: auto;
+	padding: 16px;
+	min-width: 320px;
 }
 
 #delete {

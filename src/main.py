@@ -459,8 +459,17 @@ def change_user():
             _call("post", IP + "/student/modify", json_body=patch)
 
         if changes.get("courses") is not None:
-            kurse = [int(x) for x in changes["courses"] if x != ""]
-            _call("post", IP + "/student/modify", json_body={"id": student_id, "kurse": kurse})
+            new_course_ids = {int(x) for x in changes["courses"] if x != ""}
+            r = _call("get", IP + "/student/allStudents")
+            if r is not None:
+                all_s = json.loads(r.text)["students"]
+                student_obj = next((s for s in all_s if s["id"] == student_id), None)
+                if student_obj is not None:
+                    current_course_ids = {k["id"] for k in student_obj.get("kurse", [])}
+                    for cid in new_course_ids - current_course_ids:
+                        _call("post", IP + "/course/modify", json_body={"id": cid, "addStudent": str(student_id)})
+                    for cid in current_course_ids - new_course_ids:
+                        _call("post", IP + "/course/modify", json_body={"id": cid, "removeStudent": str(student_id)})
 
         demo_patch = {"id": student_id}
         if changes.get("gender"):
@@ -585,21 +594,14 @@ def change_course():
         r2 = _call("get", IP + "/student/allStudents")
         if r2 is not None:
             all_students = json.loads(r2.text)["students"]
-            student_map = {s["id"]: s for s in all_students}
             current_student_ids = {
                 s["id"] for s in all_students
                 if any(k["id"] == course_id for k in s.get("kurse", []))
             }
             for sid in new_student_ids - current_student_ids:
-                if sid in student_map:
-                    kurse = [k["id"] for k in student_map[sid].get("kurse", [])]
-                    if course_id not in kurse:
-                        kurse.append(course_id)
-                    _call("post", IP + "/student/modify", json_body={"id": sid, "kurse": kurse})
+                _call("post", IP + "/course/modify", json_body={"id": course_id, "addStudent": str(sid)})
             for sid in current_student_ids - new_student_ids:
-                if sid in student_map:
-                    kurse = [k["id"] for k in student_map[sid].get("kurse", []) if k["id"] != course_id]
-                    _call("post", IP + "/student/modify", json_body={"id": sid, "kurse": kurse})
+                _call("post", IP + "/course/modify", json_body={"id": course_id, "removeStudent": str(sid)})
 
     return "success"
 
