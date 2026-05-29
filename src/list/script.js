@@ -1,3 +1,34 @@
+let _scannedRfid = null;
+
+async function startRfidScan(btn) {
+    _scannedRfid = null;
+    const status = document.getElementById("rfid-scan-status");
+    btn.disabled = true;
+    btn.textContent = "Warte auf Karte...";
+    status.textContent = "";
+
+    await fetch("/start_scan", { method: "POST" });
+
+    for (let i = 0; i < 40; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        const res = await fetch("/check_scan", { method: "POST" });
+        const data = await res.json();
+        if (data.status === "done") {
+            _scannedRfid = data.rfid;
+            btn.textContent = "Karte scannen";
+            btn.disabled = false;
+            status.textContent = "✓ " + data.rfid.join(", ");
+            status.style.color = "green";
+            return;
+        }
+    }
+
+    btn.textContent = "Karte scannen";
+    btn.disabled = false;
+    status.textContent = "Timeout";
+    status.style.color = "red";
+}
+
 async function send(address, dict) {
 	response = await fetch(address, {
 		method: "POST",
@@ -92,8 +123,6 @@ async function save(id) {
 	const wohnortId = document.getElementById("addr-nr").dataset.wohnortId;
 	if (wohnortId) wohnort.id = parseInt(wohnortId);
 
-	const rfidScan = document.getElementById("rfid-scan") && document.getElementById("rfid-scan").checked;
-
 	const payload = {
 		"id": id,
 		"name": name,
@@ -105,7 +134,7 @@ async function save(id) {
 		"birthday": birthday,
 		"wohnort": wohnort,
 	};
-	if (rfidScan) payload["rfid"] = "scan";
+	if (_scannedRfid) payload["rfid"] = _scannedRfid;
 
 	await fetch("/change_user", {
 		method: "POST",
@@ -177,7 +206,10 @@ async function popup(id) {
     if (w.id) document.getElementById("addr-nr").dataset.wohnortId = w.id;
 
     document.getElementById("rfid-display").textContent = (student.rfid || []).join(", ");
-    if (document.getElementById("rfid-scan")) document.getElementById("rfid-scan").checked = false;
+    _scannedRfid = null;
+    document.getElementById("rfid-scan-status").textContent = "";
+    document.getElementById("rfid-scan-btn").textContent = "Karte scannen";
+    document.getElementById("rfid-scan-btn").disabled = false;
 
     document.getElementById("save").setAttribute("onclick", `save('${id}')`);
     document.getElementById("delete").setAttribute("onclick", `deleteUser('${id}')`);

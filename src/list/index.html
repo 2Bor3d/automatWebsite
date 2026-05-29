@@ -75,8 +75,8 @@
         <div class="row admin-field" style="display:none">
             <p class="lable">Chipkarte: </p>
             <span id="rfid-display"></span>
-            <input type="checkbox" id="rfid-scan">
-            <label for="rfid-scan">Neu scannen</label>
+            <button type="button" id="rfid-scan-btn" onclick="startRfidScan(this)">Karte scannen</button>
+            <span id="rfid-scan-status"></span>
         </div>
         <div class="row">
             <button id="save">Speichern</button>

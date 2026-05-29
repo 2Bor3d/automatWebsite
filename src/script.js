@@ -20,6 +20,12 @@ function load() {
 					admin[i].classList.remove("hidden");
 				};
 			};
+
+			const pos = json["position"];
+			const hasCourse = json["sub"] && json["sub"]["course"];
+			const activePos = (pos === "list" && hasCourse) ? "kurse" : pos;
+			const activeEl = document.querySelector(`[data-pos="${activePos}"]`);
+			if (activeEl) activeEl.classList.add("nav-active");
 		})
 	});
 }

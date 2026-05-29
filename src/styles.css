@@ -63,6 +63,13 @@ iframe {
 	text-decoration: underline;
 }
 
+.nav-active {
+	font-weight: bold;
+	background-color: rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
+	padding: 1px 5px;
+}
+
 .sub {
 	padding-left: 10px;
 }

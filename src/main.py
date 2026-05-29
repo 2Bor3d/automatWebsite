@@ -13,7 +13,7 @@ import time
 app = flask.Flask(__name__);
 
 logedin = {};
-scanner = {"active": True, "id": []};
+scanner = {"active": False, "id": []};
 
 IP = "http://127.0.0.1:8000";
 #IP = "http://192.168.4.1";
@@ -64,10 +64,16 @@ def recent_attendance(attendances: list) -> list:
     result = []
     for i in range(6, -1, -1):
         d = today - timedelta(days=i)
-        status = "absent"
+        status = "none"
         for a in attendances:
             if a["year"] == d.year and a["month"] == d.month and a["day"] == d.day:
-                status = "away" if a.get("type") == "AWAY" else "present"
+                t = a.get("type", "")
+                if t == "NORMAL":
+                    status = "normal"
+                elif t == "EXCUSED":
+                    status = "excused"
+                elif t == "AWAY":
+                    status = "absent"
                 break
         result.append({"date": f"{d.year}-{d.month:02d}-{d.day:02d}", "status": status})
     return result
@@ -441,27 +447,34 @@ def delete_teacher():
     return "fail"
 
 
+@app.route("/start_scan", methods=["POST"])
+def start_scan():
+    global scanner
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+    scanner = {"active": True, "id": []}
+    return "started"
+
+
+@app.route("/check_scan", methods=["POST"])
+def check_scan():
+    global scanner
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+    if scanner["active"] and scanner["id"] != []:
+        rfid = scanner["id"]
+        scanner = {"active": False, "id": []}
+        return {"status": "done", "rfid": rfid}
+    return {"status": "waiting"}
+
+
 @app.route("/change_user", methods=["POST"])
 def change_user():
-    global scanner
     if not checkAuth(flask.request.cookies.get("auth")):
         return "fail"
 
     changes = flask.request.get_json();
     student_id = int(changes["id"]);
-
-    rfid_field = changes.get("rfid")
-    if rfid_field == "scan":
-        scanner["active"] = True
-        for _ in range(100):
-            if scanner["id"] != []:
-                changes["rfid"] = scanner["id"]
-                scanner = {"active": False, "id": []}
-                break
-            else:
-                time.sleep(0.1)
-        else:
-            changes.pop("rfid", None)
 
     if logedin[flask.request.cookies.get("auth")]["admin"]:
         if changes.get("name"):

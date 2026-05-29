@@ -26,20 +26,21 @@
 		<main id="main">
 			<nav id="bar">
 				<ul>
-					<li><p onclick="move('list', '')" 
+					<li><p onclick="move('list', '')" data-pos="list"
 						class="clickable">liste</p></li>
-					<li><p onclick="expand()" class="clickable">kurse</p>
+					<li><p onclick="expand()" data-pos="kurse"
+						class="clickable">kurse</p>
 						<ul class="sub hidden" id="sub"></ul>
 					</li>
-					<li><p onclick="move('addStudent')"
+					<li><p onclick="move('addStudent')" data-pos="addStudent"
 						class="clickable admin hidden">Nutzer Hinzufügen</p></li>
-					<li><p onclick="move('addCourse')"
+					<li><p onclick="move('addCourse')" data-pos="addCourse"
 						   class="clickable admin hidden">Kurs Hinzufügen</p></li>
-                    <li><p onclick="move('overview')"
+                    <li><p onclick="move('overview')" data-pos="overview"
                         class="clickable admin hidden">Kursübersicht</p></li>
-					<li><p onclick="move('export')"
+					<li><p onclick="move('export')" data-pos="export"
 						   class="clickable admin hidden">Daten exportieren</p></li>
-                    <li><p onclick="move('teachers')"
+                    <li><p onclick="move('teachers')" data-pos="teachers"
                            class="clickable admin hidden">Lehrkräfte</p></li>
 				</ul>
 			</nav>

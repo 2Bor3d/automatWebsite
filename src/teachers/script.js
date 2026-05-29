@@ -1,3 +1,34 @@
+let _scannedRfid = null;
+
+async function startRfidScan(btn) {
+    _scannedRfid = null;
+    const status = document.getElementById("rfid-scan-status");
+    btn.disabled = true;
+    btn.textContent = "Warte auf Karte...";
+    status.textContent = "";
+
+    await fetch("/start_scan", { method: "POST" });
+
+    for (let i = 0; i < 40; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        const res = await fetch("/check_scan", { method: "POST" });
+        const data = await res.json();
+        if (data.status === "done") {
+            _scannedRfid = data.rfid;
+            btn.textContent = "Karte scannen";
+            btn.disabled = false;
+            status.textContent = "✓ " + data.rfid.join(", ");
+            status.style.color = "green";
+            return;
+        }
+    }
+
+    btn.textContent = "Karte scannen";
+    btn.disabled = false;
+    status.textContent = "Timeout";
+    status.style.color = "red";
+}
+
 async function send(address, dict) {
 	const response = await fetch(address, {
 		method: "POST",
@@ -55,6 +86,12 @@ async function popup(id) {
 	document.getElementById("addr-country").value = w.country || "";
 	if (w.id) document.getElementById("addr-nr").dataset.wohnortId = w.id;
 
+	document.getElementById("rfid-display").textContent = (teacher.rfid || []).join(", ");
+	_scannedRfid = null;
+	document.getElementById("rfid-scan-status").textContent = "";
+	document.getElementById("rfid-scan-btn").textContent = "Karte scannen";
+	document.getElementById("rfid-scan-btn").disabled = false;
+
 	document.getElementById("save").setAttribute("onclick", `saveTeacher('${id}')`);
 	document.getElementById("delete").setAttribute("onclick", `deleteTeacher('${id}')`);
 }
@@ -81,7 +118,7 @@ async function saveTeacher(id) {
 		gender: document.getElementById("gender").value,
 		birthday: birthdayVal ? new Date(birthdayVal).getTime() : (teacher ? teacher.birthday : 0),
 		wohnort: wohnort,
-		rfid: teacher ? (teacher.rfid || []) : [],
+		rfid: _scannedRfid || (teacher ? (teacher.rfid || []) : []),
 		passwordHash: document.getElementById("passwordHash").value,
 		newPassword: document.getElementById("newPassword").value,
 	};

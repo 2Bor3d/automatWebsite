@@ -132,14 +132,18 @@
 	cursor: default;
 }
 
-.day-square.present {
-	background-color: #c0392b;
+.day-square.normal {
+	background-color: #27ae60;
 }
 
-.day-square.away {
+.day-square.excused {
 	background-color: #e67e22;
 }
 
 .day-square.absent {
+	background-color: #c0392b;
+}
+
+.day-square.none {
 	background-color: #d5d5d5;
 }
