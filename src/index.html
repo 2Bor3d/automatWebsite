@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>B.A.M.B.I. v.0.1</title>
-		<meta name="viewport" contetn="width=device-width, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<script src="script.js"></script>
 		<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 		<link rel="stylesheet" href="styles.css">
@@ -13,8 +13,9 @@
 			<header id="header">
 				<div class="header-logo"><img src="static/LogoBambiWebsite.png" alt="logo"/></div>
 				<div class="header-text">MINT-Zentrum Seeheim</div>
+				<div id="viewas-container"></div>
 				<div id="user">
-					<p onclick="logout()" id="username" 
+					<p onclick="logout()" id="username"
 					class="clickable">Unknown</p>
 				</div>
 			<!-- </div> -->
@@ -25,19 +26,20 @@
 		</header>
 		<main id="main">
 			<nav id="bar">
-				<ul>
+				<button type="button" id="bar-toggle" onclick="toggleBar()" title="Menü ein-/ausblenden">☰</button>
+				<ul id="bar-list">
 					<li><p onclick="move('list', '')" data-pos="list"
 						class="clickable">liste</p></li>
 					<li><p onclick="expand()" data-pos="kurse"
-						class="clickable">kurse</p>
+						class="clickable">Kursübersicht</p>
 						<ul class="sub hidden" id="sub"></ul>
 					</li>
 					<li><p onclick="move('addStudent')" data-pos="addStudent"
 						class="clickable admin hidden">Nutzer Hinzufügen</p></li>
+					<li><p onclick="move('importStudents')" data-pos="importStudents"
+						class="clickable admin hidden">Schüler importieren</p></li>
 					<li><p onclick="move('addCourse')" data-pos="addCourse"
 						   class="clickable admin hidden">Kurs Hinzufügen</p></li>
-                    <li><p onclick="move('overview')" data-pos="overview"
-                        class="clickable admin hidden">Kursübersicht</p></li>
 					<li><p onclick="move('export')" data-pos="export"
 						   class="clickable admin hidden">Daten exportieren</p></li>
                     <li><p onclick="move('teachers')" data-pos="teachers"

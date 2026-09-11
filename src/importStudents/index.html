@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>B.A.M.B.I. v.0.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/page/script.js"></script>
+    <link rel="stylesheet" href="page/styles.css">
+</head>
+<body onload="load()">
+<div id="container">
+    <h2>Schülerliste importieren</h2>
+    <p class="intro">
+        Eine CSV-Datei mit einer Zeile pro Person. Die erste Zeile enthält die
+        Spaltennamen, getrennt durch Semikolon oder Komma. Pflicht sind
+        <b>Vorname</b>, <b>Nachname</b> und <b>Geschlecht</b>; dazu können
+        Geburtstag, Straße, Nr, PLZ, Stadt, Land und Kurs kommen.
+        <a href="/import_template">Vorlage herunterladen</a>
+    </p>
+
+    <label for="file" id="file-label">
+        <span id="file-button">CSV-Datei wählen</span>
+        <span id="file-name">Keine Datei gewählt</span>
+    </label>
+    <input id="file" type="file" accept=".csv,text/csv">
+
+    <p id="summary" class="hidden"></p>
+
+    <div id="preview-wrap" class="hidden">
+        <table id="preview">
+            <thead>
+            <tr>
+                <th>Zeile</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Geburtstag</th>
+                <th>Geschlecht</th>
+                <th>Adresse</th>
+                <th>Kurs</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="actions" class="hidden">
+        <label id="card-label">
+            <input id="with-card" type="checkbox" checked>
+            Chipkarten danach am Automaten zuweisen
+        </label>
+        <p class="hint" id="card-hint">
+            Alle werden vorgemerkt und in der Reihenfolge der Datei am Automaten
+            unter „Nutzer hinzufügen“ angezeigt. Wer seine Karte scannt, ist
+            angelegt.
+        </p>
+        <button id="import" type="button">Importieren</button>
+    </div>
+
+    <p id="message"></p>
+</div>
+
+<div id="confirm-overlay" class="hidden">
+    <div id="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h3 id="confirm-title">Ohne Chipkarten importieren?</h3>
+        <p id="confirm-text">
+            Ohne Chipkarte kann sich niemand am Automaten anmelden. Karten lassen
+            sich später einzeln über „Bearbeiten“ nachtragen.
+        </p>
+        <div id="confirm-actions">
+            <button type="button" id="confirm-cancel">Abbrechen</button>
+            <button type="button" id="confirm-ok">Ohne Karten importieren</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>B.A.M.B.I. v.0.1</title>
-    <meta name="viewport" contetn="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="/page/script.js"></script>
     <link rel="stylesheet" href="page/styles.css">
+    <script src="/static/datepicker.js"></script>
+    <link rel="stylesheet" href="/static/datepicker.css">
 </head>
 <body>
 <div id="container">
@@ -19,6 +21,10 @@
             <label for="to">Bis: </label>
             <input type="date" id="to" name="to">
         </div>
+        <script>
+            initDatePicker(document.getElementById("from"), { allowClear: true });
+            initDatePicker(document.getElementById("to"), { allowClear: true });
+        </script>
 
         <div class="field">
             <label for="course">Kurs:</label>

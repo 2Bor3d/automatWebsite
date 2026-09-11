@@ -6,8 +6,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<script src="/page/script.js"></script>
 		<link rel="stylesheet" href="page/styles.css">
+		<script src="/static/datepicker.js"></script>
+		<link rel="stylesheet" href="/static/datepicker.css">
     </head>
-    <body onload="load()">
+    <body onload="load(); initDatePicker(document.getElementById('birthday'), {})">
 		<main id="list">
 			<table id="table">
 				<tr>
@@ -19,61 +21,90 @@
 			</table>
 		</main>
 		<div id="popup" class="hidden">
-			<button id="close" onclick="closePopup()">Schließen</button>
-			<div class="row">
-				<p id="identification" class="lable">Id: </p>
-			</div>
-			<div class="row">
-				<p class="lable">Vorname: </p>
-				<input id="firstName">
-				<p class="lable">Nachname: </p>
-				<input id="lastName">
-			</div>
-			<div class="row">
-				<p class="lable">E-Mail: </p>
-				<input id="mail" type="email">
-			</div>
-			<div class="row">
-				<label for="level">Level: </label>
-				<select id="level">
-					<option value="NORMAL">NORMAL</option>
-					<option value="ADMIN">ADMIN</option>
-				</select>
-			</div>
-			<div class="row">
-				<p class="lable">Geschlecht: </p>
-				<select id="gender"></select>
-			</div>
-			<div class="row">
-				<p class="lable">Geburtstag: </p>
-				<input id="birthday" type="date">
-			</div>
-			<div class="row">
-				<p class="lable">Adresse: </p>
-				<div id="address-block">
-					<input id="addr-nr" type="number" placeholder="Hausnr.">
-					<input id="addr-street" placeholder="Straße">
-					<input id="addr-city" placeholder="Stadt">
-					<input id="addr-zip" type="number" placeholder="PLZ">
-					<input id="addr-country" placeholder="Land">
+			<div class="modal-panel">
+				<nav class="modal-rail">
+					<button type="button" class="active" data-jump="sec-person"><span class="dot"></span>Person</button>
+					<button type="button" data-jump="sec-zugang"><span class="dot"></span>Zugang</button>
+					<button type="button" data-jump="sec-adresse"><span class="dot"></span>Adresse</button>
+					<button type="button" data-jump="sec-chip"><span class="dot"></span>Chipkarte</button>
+				</nav>
+				<div class="modal-main">
+					<div class="modal-head">
+						<h3>Lehrkraft bearbeiten <span id="identification" class="modal-id"></span></h3>
+						<button id="close" class="modal-close" onclick="closePopup()" aria-label="Schließen">✕</button>
+					</div>
+					<div class="modal-scroll">
+						<section class="modal-section" id="sec-person">
+							<p class="sec-title">Person</p>
+							<div class="row">
+								<div class="field-pair">
+									<p class="lable">Vorname: </p>
+									<input id="firstName">
+								</div>
+								<div class="field-pair">
+									<p class="lable">Nachname: </p>
+									<input id="lastName">
+								</div>
+							</div>
+							<div class="row">
+								<p class="lable">Geschlecht: </p>
+								<select id="gender"></select>
+							</div>
+							<div class="row">
+								<p class="lable">Geburtstag: </p>
+								<input id="birthday" type="date">
+							</div>
+						</section>
+
+						<section class="modal-section" id="sec-zugang">
+							<p class="sec-title">Zugang</p>
+							<div class="row">
+								<p class="lable">E-Mail: </p>
+								<input id="mail" type="email">
+							</div>
+							<div class="row">
+								<label for="level" class="lable">Level: </label>
+								<select id="level">
+									<option value="NORMAL">NORMAL</option>
+									<option value="ADMIN">ADMIN</option>
+								</select>
+							</div>
+							<div class="row">
+								<p class="lable">Neues Passwort: </p>
+								<input id="newPassword" type="password" placeholder="leer lassen = unverändert">
+							</div>
+							<input type="hidden" id="passwordHash">
+						</section>
+
+						<section class="modal-section" id="sec-adresse">
+							<p class="sec-title">Adresse</p>
+							<div class="row">
+								<div id="address-block">
+									<input id="addr-nr" type="number" placeholder="Hausnr.">
+									<input id="addr-street" placeholder="Straße">
+									<input id="addr-city" placeholder="Stadt">
+									<input id="addr-zip" type="number" placeholder="PLZ">
+									<input id="addr-country" placeholder="Land">
+								</div>
+							</div>
+						</section>
+
+						<section class="modal-section" id="sec-chip">
+							<p class="sec-title">Chipkarte</p>
+							<div class="row">
+								<span id="rfid-display"></span>
+								<button type="button" id="rfid-scan-btn" onclick="startRfidScan(this)">Karte scannen</button>
+								<span id="rfid-scan-status"></span>
+							</div>
+						</section>
+					</div>
+					<div class="modal-foot">
+						<p id="message"></p>
+						<button id="delete">Löschen</button>
+						<button id="save">Speichern</button>
+					</div>
 				</div>
 			</div>
-			<div class="row">
-				<p class="lable">Chipkarte: </p>
-				<span id="rfid-display"></span>
-				<button type="button" id="rfid-scan-btn" onclick="startRfidScan(this)">Karte scannen</button>
-				<span id="rfid-scan-status"></span>
-			</div>
-			<div class="row">
-				<p class="lable">Neues Passwort: </p>
-				<input id="newPassword" type="password" placeholder="leer lassen = unverändert">
-			</div>
-			<input type="hidden" id="passwordHash">
-			<div class="row">
-				<button id="save">Speichern</button>
-				<button id="delete">Löschen</button>
-			</div>
-			<p id="message"></p>
 		</div>
     </body>
 </html>

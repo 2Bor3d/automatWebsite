@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>B.A.M.B.I. v.0.1</title>
-    <meta name="viewport" contetn="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="/page/script.js"></script>
     <link rel="stylesheet" href="page/styles.css">
+    <script src="/static/datepicker.js"></script>
+    <link rel="stylesheet" href="/static/datepicker.css">
 </head>
-<body onload="load()">
+<body onload="load(); initDatePicker(document.getElementById('birthday'), {})">
 <div id="container">
     <div id="form">
         <label for="type" id="lType">Typ: </label>
@@ -21,10 +23,14 @@
         <label for="lastName" id="lLastName">Lastname: </label>
         <input id="lastName">
 
-        <label for="rfid" id="lRfid">Chipkarte: </label>
+        <label for="rfid" id="lRfid">Chipkarte am Automaten zuweisen: </label>
         <div>
-            <input id="rfid" name="rfid" type="checkbox">
+            <input id="rfid" name="rfid" type="checkbox" checked>
         </div>
+        <p id="rfid-hint">
+            Die Person wird vorgemerkt und angelegt, sobald ihre Karte am
+            Automaten unter „Nutzer hinzufügen“ gescannt wird.
+        </p>
 
         <label for="gender" id="lGender">Geschlechtsidentifikationstyp: </label>
         <select id="gender" name="gender"></select>
@@ -40,7 +46,7 @@
             <input id="street">
             <label for="city" id="lCity">Stadt: </label>
             <input id="city">
-            <label for="zip" id=lZip">Postleitzahl: </label>
+            <label for="zip" id="lZip">Postleitzahl: </label>
             <input id="zip" type="number">
             <label for="country" id="lCountry">Land: </label>
             <input id="country" value="Deutschland">
@@ -59,7 +65,21 @@
         <input id="password" name="password" class="admin hidden" type="password">
 
         <input id="submit" type="button" value="Hinzufügen" onclick="submit()">
-        <p id="message">
+        <p id="message"></p>
+    </div>
+</div>
+
+<div id="confirm-overlay" class="hidden">
+    <div id="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h3 id="confirm-title">Ohne Chipkarte anlegen?</h3>
+        <p id="confirm-text">
+            Ohne Chipkarte kann sich diese Person nicht am Automaten anmelden.
+            Die Karte lässt sich später über „Bearbeiten“ nachtragen.
+        </p>
+        <div id="confirm-actions">
+            <button type="button" id="confirm-cancel">Abbrechen</button>
+            <button type="button" id="confirm-ok">Ohne Karte anlegen</button>
+        </div>
     </div>
 </div>
 </body>

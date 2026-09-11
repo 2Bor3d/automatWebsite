@@ -51,6 +51,7 @@ async function popup(id) {
 	if (!teacher) return;
 
 	document.getElementById("popup").classList.remove("hidden");
+	if (window.resetModalScroll) window.resetModalScroll();
 	document.getElementById("identification").innerText = "Id: " + teacher.id;
 	document.getElementById("firstName").value = teacher.firstName;
 	document.getElementById("lastName").value = teacher.lastName;
@@ -69,10 +70,12 @@ async function popup(id) {
 	});
 
 	if (teacher.birthday) {
+		// Das Backend liefert Mitternacht in deutscher Zeit (DATE-Spalte). In
+		// UTC gelesen wäre das 22/23 Uhr am Vortag - also lokal auslesen.
 		const bd = new Date(teacher.birthday);
-		const yyyy = bd.getUTCFullYear();
-		const mm = String(bd.getUTCMonth() + 1).padStart(2, "0");
-		const dd = String(bd.getUTCDate()).padStart(2, "0");
+		const yyyy = bd.getFullYear();
+		const mm = String(bd.getMonth() + 1).padStart(2, "0");
+		const dd = String(bd.getDate()).padStart(2, "0");
 		document.getElementById("birthday").value = `${yyyy}-${mm}-${dd}`;
 	} else {
 		document.getElementById("birthday").value = "";
@@ -171,6 +174,7 @@ async function load() {
 
 		const td = document.createElement("td");
 		const btn = document.createElement("button");
+		btn.className = "edit-btn";
 		btn.setAttribute("onclick", `popup(${teacher.id})`);
 		btn.innerText = "editieren";
 		td.appendChild(btn);
@@ -178,3 +182,82 @@ async function load() {
 		table.appendChild(tr);
 	});
 }
+
+// script.js wird im <head> geladen, also vor dem Rest des Bodys - deshalb
+// erst ab DOMContentLoaded auf #popup etc. zugreifen.
+document.addEventListener("DOMContentLoaded", function () {
+	// Klick auf den abgedunkelten Hintergrund oder Esc schließt das Fenster.
+	document.getElementById("popup").addEventListener("click", function (e) {
+		if (e.target.id === "popup") closePopup();
+	});
+	document.addEventListener("keydown", function (e) {
+		if (e.key === "Escape" && !document.getElementById("popup").classList.contains("hidden")) {
+			closePopup();
+		}
+	});
+
+	// Sprungleiste links: Klick scrollt zum Abschnitt, aktiver Abschnitt wird beim Scrollen markiert.
+	const rail = document.querySelector(".modal-rail");
+	const scroller = document.querySelector(".modal-scroll");
+	if (!rail || !scroller) return;
+
+	function setActive(id) {
+		rail.querySelectorAll("button[data-jump]").forEach(function (b) {
+			b.classList.toggle("active", b.dataset.jump === id);
+		});
+	}
+
+	// Angeklickter Abschnitt, solange er noch (mindestens teilweise) sichtbar
+	// ist - manche Abschnitte lassen sich wegen zu wenig Inhalt darunter nicht
+	// bis ganz nach oben scrollen, sollen aber trotzdem als aktiv gelten.
+	let clickedId = null;
+
+	rail.addEventListener("click", function (e) {
+		const btn = e.target.closest("button[data-jump]");
+		if (!btn) return;
+		const target = document.getElementById(btn.dataset.jump);
+		if (target) {
+			clickedId = btn.dataset.jump;
+			setActive(clickedId);
+			target.scrollIntoView({ block: "start", behavior: "smooth" });
+		}
+	});
+
+	function isVisible(section) {
+		const top = section.offsetTop - scroller.scrollTop;
+		return top < scroller.clientHeight && top + section.offsetHeight > 0;
+	}
+
+	// Aktiver Abschnitt = der letzte, dessen oberer Rand bereits überscrollt wurde.
+	// Funktioniert unabhängig davon, ob der Inhalt insgesamt viel oder wenig
+	// größer als das Fenster ist (im Gegensatz zu einem IntersectionObserver mit
+	// festem Schwellwert, der bei kurzem Inhalt mehrere Treffer gleichzeitig liefert).
+	const sections = Array.from(scroller.querySelectorAll(".modal-section"));
+	function updateActiveByScroll() {
+		if (clickedId) {
+			const clicked = document.getElementById(clickedId);
+			if (clicked && isVisible(clicked)) { setActive(clickedId); return; }
+			clickedId = null;
+		}
+
+		if (scroller.scrollHeight > scroller.clientHeight + 2 && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2) {
+			setActive(sections[sections.length - 1].id);
+			return;
+		}
+		const y = scroller.scrollTop + 4;
+		let current = sections[0];
+		sections.forEach(function (s) {
+			if (s.offsetTop <= y) current = s;
+		});
+		if (current) setActive(current.id);
+	}
+	scroller.addEventListener("scroll", updateActiveByScroll);
+	// Kein sofortiger Aufruf hier: #popup ist beim Laden noch display:none,
+	// da waeren alle offsetTop 0 und der letzte Abschnitt wuerde faelschlich
+	// als aktiv markiert. popup() ruft stattdessen resetModalScroll() auf,
+	// sobald das Fenster tatsaechlich sichtbar ist.
+	window.resetModalScroll = function () {
+		scroller.scrollTop = 0;
+		if (sections[0]) setActive(sections[0].id);
+	};
+});

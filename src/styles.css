@@ -74,6 +74,12 @@ iframe {
 	padding-left: 10px;
 }
 
+.sub-all {
+	padding-bottom: 6px;
+	margin-bottom: 4px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+
 .hidden {
 	display: none;
 }
@@ -84,13 +90,60 @@ iframe {
 /* } */
 
 
+#viewas-container {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+}
+
+#viewas-select {
+	font: inherit;
+	font-size: 14px;
+	padding: 4px 8px;
+	border-radius: 5px;
+	border: 1px solid rgba(255, 255, 255, 0.6);
+	background-color: rgba(0, 0, 0, 0.15);
+	color: #ffffff;
+}
+
+#viewas-select option {
+	color: #333;
+	background-color: #fff;
+}
+
+#viewas-banner {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	padding: 5px 10px;
+	border-radius: 5px;
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+#viewas-banner button {
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 3px 10px;
+	border-radius: 5px;
+	border: none;
+	background-color: #ffffff;
+	color: #476920;
+	cursor: pointer;
+}
+
+#viewas-banner button:hover {
+	background-color: #eef6e3;
+}
+
 #user {
 	/* position: relative;
 	top: 50%;
 	-ms-transform: translateY(-50%) translateX(-50%);
 	transform: translateY(-50%); */
 	justify-content: right;
-	margin-left: auto;
+	margin-left: 16px;
 }
 
 main {
@@ -102,13 +155,59 @@ main {
 }
 
 #bar {
-	padding: 5px;
+	padding: 10px 18px;
 	border-radius: 0 0 5px 0;
 	color: #ffffff;
 	background-color: #7aae3e;
-	width: min-content;
+	width: 250px;
+	box-sizing: border-box;
 	height: min-content;
 	float: left;
+	transition: width 0.15s ease, padding 0.15s ease;
+}
+
+#bar p,
+#bar .clickable {
+	font-size: 18px;
+	line-height: 1.6;
+	width: auto;
+	white-space: normal;
+	word-break: break-word;
+	/* Hängender Einzug: bricht ein Eintrag doch um (sehr langer Kursname o.ä.),
+	   rückt die Folgezeile ein - so ist klar, dass sie noch zu diesem einen
+	   Eintrag gehört und nicht der Anfang eines neuen ist. */
+	padding-left: 14px;
+	text-indent: -14px;
+}
+
+#bar li {
+	margin-bottom: 2px;
+}
+
+#bar-toggle {
+	display: block;
+	margin-bottom: 8px;
+	border: none;
+	background: transparent;
+	color: #ffffff;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 2px 4px;
+	border-radius: 4px;
+}
+
+#bar-toggle:hover {
+	background-color: rgba(0, 0, 0, 0.15);
+}
+
+#bar.bar-collapsed {
+	width: min-content;
+	padding: 10px 8px;
+}
+
+#bar.bar-collapsed #bar-list {
+	display: none;
 }
 
 #page {

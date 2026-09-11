@@ -15,6 +15,9 @@ app = flask.Flask(__name__);
 logedin = {};
 scanner = {"active": False, "id": []};
 
+# Wartezeit auf einen Kartenscan beim Anlegen: 100 * 0.1s = 10 Sekunden.
+SCAN_TIMEOUT_STEPS = 100;
+
 IP = "http://127.0.0.1:8000";
 #IP = "http://192.168.4.1";
 
@@ -47,11 +50,25 @@ def get_attendances(student_id: int) -> list:
     return json.loads(r.text).get("attendances", [])
 
 
+ATTENDANCE_STATUS = {"NORMAL": "normal", "EXCUSED": "excused", "AWAY": "absent"}
+
+
+def day_statuses(attendances: list) -> dict:
+    """{ "YYYY-MM-DD": "normal" | "excused" | "absent" } - pro Tag zählt der
+    zuletzt angelegte Eintrag. Ältere Daten enthalten mehrere Einträge für
+    denselben Tag (früher wurde beim Umstellen ergänzt statt ersetzt); der
+    neueste ist die letzte Änderung."""
+    result = {}
+    for a in sorted(attendances, key=lambda a: a.get("id") or 0):
+        status = ATTENDANCE_STATUS.get(a.get("type", ""))
+        if status:
+            result[f"{a['year']}-{a['month']:02d}-{a['day']:02d}"] = status
+    return result
+
+
 def last_attendance_date(attendances: list) -> str:
-    if not attendances:
-        return "None"
-    last = attendances[-1]
-    return f"{last['year']}-{last['month']:02d}-{last['day']:02d}"
+    present = [d for d, s in day_statuses(attendances).items() if s == "normal"]
+    return max(present) if present else "None"
 
 
 def student_balance(entry: dict) -> float:
@@ -59,27 +76,43 @@ def student_balance(entry: dict) -> float:
     return hours[0] if hours else 0
 
 
-def recent_attendance(attendances: list) -> list:
+# Kurs.day (Java) -> Python date.weekday() (Montag=0 .. Sonntag=6). Reihenfolge
+# entspricht dem Ordinal des Day-Enums, siehe Day.java.
+DAY_TO_WEEKDAY = {
+    "MONDTAG": 0, "DEINSTAG": 1, "METTWOCH": 2, "DÖNNERSTAG": 3,
+    "REINTAG": 4, "SAUFTAG": 5, "SONNDAG": 6,
+}
+
+
+def recent_attendance(attendances: list, kurse: list) -> list:
+    # Zeigt die letzten 7 tatsächlichen Kurstermine (Wochentage der belegten
+    # Kurse), nicht die letzten 7 Kalendertage - sonst tauchen kursfreie Tage
+    # als "none" auf und echte Fehltage rutschen aus dem Fenster.
+    weekdays = {DAY_TO_WEEKDAY[k["day"]] for k in kurse if k.get("day") in DAY_TO_WEEKDAY}
+
     today = Date.today()
+    dates = []
+    d = today
+    while len(dates) < 7:
+        if not weekdays or d.weekday() in weekdays:
+            dates.append(d)
+        d -= timedelta(days=1)
+    dates.reverse()
+
+    statuses = day_statuses(attendances)
     result = []
-    for i in range(6, -1, -1):
-        d = today - timedelta(days=i)
-        status = "none"
-        for a in attendances:
-            if a["year"] == d.year and a["month"] == d.month and a["day"] == d.day:
-                t = a.get("type", "")
-                if t == "NORMAL":
-                    status = "normal"
-                elif t == "EXCUSED":
-                    status = "excused"
-                elif t == "AWAY":
-                    status = "absent"
-                break
-        result.append({"date": f"{d.year}-{d.month:02d}-{d.day:02d}", "status": status})
+    for d in dates:
+        key = f"{d.year}-{d.month:02d}-{d.day:02d}"
+        # Ein vergangener Kurstermin ohne jeden Eintrag heißt: nicht da gewesen.
+        # Nur der heutige Termin bleibt neutral, solange noch niemand gescannt
+        # hat - der Kurs kann ja noch bevorstehen.
+        default = "none" if d >= today else "absent"
+        result.append({"date": key, "status": statuses.get(key, default)})
     return result
 
 
 def format_for_list(entry: dict, attendances: list) -> dict:
+    kurse = entry.get("kurse", [])
     return {
         "id": entry["id"],
         "firstName": entry["firstName"],
@@ -87,12 +120,12 @@ def format_for_list(entry: dict, attendances: list) -> dict:
         "attendence": last_attendance_date(attendances),
         "balance": student_balance(entry),
         "warning": False,
-        "kurse": [k["id"] for k in entry.get("kurse", [])],
+        "kurse": [k["id"] for k in kurse],
         "gender": entry.get("gender", ""),
         "birthday": entry.get("birthday", 0),
         "rfid": entry.get("rfid", []),
         "wohnort": entry.get("wohnort", {}),
-        "recent_days": recent_attendance(attendances),
+        "recent_days": recent_attendance(attendances, kurse),
     }
 
 
@@ -228,6 +261,61 @@ def move():
         return flask.make_response("authorisation failed"), 401
 
 
+@app.route("/view_as", methods=["POST"])
+def view_as():
+    token = flask.request.cookies.get("auth")
+    if not checkAuth(token):
+        return flask.make_response("authorisation failed"), 401
+
+    session = logedin[token]
+    # realAdmin ist nur gesetzt, sobald man schon einmal "view as" genutzt hat -
+    # vorher spiegelt "admin" selbst den echten Login wieder.
+    if not session.get("realAdmin", session["admin"]):
+        return flask.make_response("forbidden"), 403
+
+    body = flask.request.get_json()
+    teacher_id = body.get("teacherId")
+
+    r = _call("get", IP + "/teacher/allTeachers")
+    if r is None: return flask.make_response("backend unavailable", 503)
+    teachers = json.loads(r.text)["teachers"]
+    teacher = next((t for t in teachers if str(t["id"]) == str(teacher_id)), None)
+    if teacher is None:
+        return flask.make_response("teacher not found"), 404
+
+    if "realId" not in session:
+        session["realId"] = session["id"]
+        session["realUsername"] = session["username"]
+        session["realAdmin"] = session["admin"]
+
+    session["id"] = teacher["id"]
+    session["username"] = teacher["mail"]
+    session["admin"] = False
+    session["viewAsName"] = f"{teacher['firstName']} {teacher['lastName']}"
+    session["position"] = "list"
+    session["sub"] = {}
+    return flask.make_response("success")
+
+
+@app.route("/view_as_stop", methods=["POST"])
+def view_as_stop():
+    token = flask.request.cookies.get("auth")
+    if not checkAuth(token):
+        return flask.make_response("authorisation failed"), 401
+
+    session = logedin[token]
+    if "realId" not in session:
+        return flask.make_response("success")
+
+    session["id"] = session.pop("realId")
+    session["username"] = session.pop("realUsername")
+    session["admin"] = session.pop("realAdmin")
+    session.pop("viewAsName", None)
+    session["position"] = "list"
+    session["sub"] = {}
+    return flask.make_response("success")
+
+
 def _fetch_filtered_students(user: dict) -> list:
     """Return new-API student list filtered by course access and sub-filters."""
     r = _call("get", IP + "/student/allStudents");
@@ -253,6 +341,32 @@ def _fetch_filtered_students(user: dict) -> list:
                     term in (s["firstName"] + " " + s["lastName"]).lower()]
 
     return students
+
+
+def is_tutor_of_student(user: dict, student_id: int) -> bool:
+    """True if the user leads at least one course this student attends.
+
+    Kursleitungen dürfen Anwesenheit und Zeitkonto ihrer eigenen Teilnehmenden
+    pflegen - Stammdaten (Name, Kurse, Adresse, Chipkarte) bleiben Admins
+    vorbehalten.
+    """
+    r = _call("get", IP + "/student/allStudents")
+    if r is None:
+        return False
+    student = next((s for s in json.loads(r.text)["students"] if s["id"] == student_id), None)
+    if student is None:
+        return False
+
+    student_course_ids = {k["id"] for k in student.get("kurse", [])}
+
+    r = _call("get", IP + "/course/allCourses")
+    if r is None:
+        return False
+    for course in json.loads(r.text)["courses"]:
+        if course["id"] in student_course_ids and \
+                any(t["id"] == user["id"] for t in course.get("tutor", [])):
+            return True
+    return False
 
 
 @app.route("/entrys", methods=["POST"])
@@ -350,27 +464,90 @@ def add_student():
     data = flask.request.get_json();
     rfid_field = data.pop("rfid", None)
 
-    scanned_rfid = None
-    if rfid_field == "true":
-        scanner["active"] = True;
-        for i in range(100):
-            if scanner["id"] != []:
-                scanned_rfid = scanner["id"];
-                scanner = {"active": False, "id": []};
-                break;
-            else:
-                time.sleep(0.1);
-    elif isinstance(rfid_field, list):
-        scanned_rfid = rfid_field
+    if rfid_field == "false":
+        # Ohne Chipkarte sofort anlegen. Bewusst NICHT über die Warteschlange:
+        # /seed/flush nimmt immer den ältesten Eintrag und würde damit einem
+        # anderen, auf seine Karte wartenden Schüler die Anmeldung wegnehmen.
+        r = _call("post", IP + "/student/addWithoutCard", json_body=data);
+        return "success" if r is not None else "unknown error";
 
+    # Mit Chipkarte: nur vormerken. /student/addStudent legt noch nichts an,
+    # sondern hängt den Schüler in die Warteschlange des Backends. Angelegt wird
+    # er erst, wenn am Automaten ("Nutzer hinzufügen") seine Karte gescannt wird.
     r = _call("post", IP + "/student/addStudent", json_body=data);
     if r is None:
         return "unknown error";
+    return "queued";
 
-    if scanned_rfid:
-        _call("post", IP + "/seed/flush", json_body={"rfid": scanned_rfid});
 
-    return "success";
+IMPORT_TEMPLATE = (
+    "Vorname;Nachname;Geburtstag;Geschlecht;Straße;Nr;PLZ;Stadt;Land;Kurs\r\n"
+    "Anna;Beispiel;03.04.2012;w;Hauptstraße;5;64342;Seeheim-Jugenheim;Deutschland;\r\n"
+)
+
+
+@app.route("/import_template")
+def import_template():
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+    # BOM, damit Excel die Umlaute als UTF-8 erkennt.
+    response = flask.make_response("﻿" + IMPORT_TEMPLATE)
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = "attachment; filename=schuelerliste_vorlage.csv"
+    return response
+
+
+@app.route("/import_students", methods=["POST"])
+def import_students():
+    """Legt die geprüften Zeilen des CSV-Imports an. Mit Karte werden alle der
+    Reihe nach vorgemerkt (Automat, "Nutzer hinzufügen"), ohne Karte sofort
+    angelegt. Antwortet mit einem Ergebnis pro Zeile, in derselben Reihenfolge."""
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+    if not logedin[flask.request.cookies.get("auth")]["admin"]:
+        return flask.make_response("authorisation failed"), 401
+
+    body = flask.request.get_json(silent=True) or {}
+    rows = body.get("rows")
+    if not isinstance(rows, list):
+        return flask.make_response("rows fehlt"), 400
+    with_card = bool(body.get("withCard"))
+    endpoint = "/student/addStudent" if with_card else "/student/addWithoutCard"
+
+    results = []
+    for row in rows:
+        try:
+            address = row.get("address") or {}
+            data = {
+                "firstName": str(row["firstName"]).strip(),
+                "lastName": str(row["lastName"]).strip(),
+                "gender": str(row["gender"]),
+                "birthday": int(row.get("birthday") or 0),
+                "address": {
+                    "nr": int(address.get("nr") or 0),
+                    "street": str(address.get("street") or ""),
+                    "city": str(address.get("city") or ""),
+                    "zip": int(address.get("zip") or 0),
+                    "country": str(address.get("country") or "Deutschland"),
+                },
+                "kurse": [int(k) for k in row.get("kurse") or []],
+            }
+        except (KeyError, TypeError, ValueError):
+            results.append({"status": "error", "message": "Zeile unvollständig"})
+            continue
+        if not data["firstName"] or not data["lastName"]:
+            results.append({"status": "error", "message": "Name fehlt"})
+            continue
+        if data["gender"] not in GENDERS:
+            results.append({"status": "error", "message": "Geschlecht unbekannt"})
+            continue
+
+        r = _call("post", IP + endpoint, json_body=data)
+        if r is None:
+            results.append({"status": "error", "message": "vom Backend abgelehnt"})
+        else:
+            results.append({"status": "queued" if with_card else "created"})
+    return {"results": results}
 
 
 @app.route("/add_teacher", methods=["POST"])
@@ -384,18 +561,11 @@ def add_teacher():
     data = flask.request.get_json();
     rfid_field = data.pop("rfid", None)
 
-    scanned_rfid = []
-    if rfid_field == "true":
-        scanner["active"] = True;
-        for i in range(100):
-            if scanner["id"] != []:
-                scanned_rfid = scanner["id"];
-                scanner = {"active": False, "id": []};
-                break;
-            else:
-                time.sleep(0.1);
-    elif isinstance(rfid_field, list):
-        scanned_rfid = rfid_field
+    # Lehrkräfte laufen nicht über die Warteschlange, sie werden sofort
+    # angelegt. Eine Karte wird - falls gewünscht - hinterher über
+    # "Lehrkräfte -> bearbeiten -> Karte scannen" zugewiesen; hier blockierend
+    # auf einen Scan zu warten würde nur den Automaten-Scan wegschnappen.
+    scanned_rfid = rfid_field if isinstance(rfid_field, list) else []
 
     data["rfid"] = scanned_rfid;
     r = _call("post", IP + "/teacher/addTeacher", json_body=data);
@@ -452,6 +622,8 @@ def start_scan():
     global scanner
     if not checkAuth(flask.request.cookies.get("auth")):
         return flask.make_response("authorisation failed"), 401
+    # Bewusst komplett neu setzen: ein liegengebliebener Scan von vorher würde
+    # sonst sofort als "gescannt" durchgehen.
     scanner = {"active": True, "id": []}
     return "started"
 
@@ -476,7 +648,14 @@ def change_user():
     changes = flask.request.get_json();
     student_id = int(changes["id"]);
 
-    if logedin[flask.request.cookies.get("auth")]["admin"]:
+    user = logedin[flask.request.cookies.get("auth")]
+    is_admin = user["admin"]
+    # Kursleitung darf Anwesenheit/Zeitkonto der eigenen Teilnehmenden pflegen.
+    may_track = is_admin or is_tutor_of_student(user, student_id)
+    if not may_track:
+        return "fail"
+
+    if is_admin:
         if changes.get("name"):
             parts = changes["name"].split(" ", 1)
             patch = {
@@ -511,23 +690,24 @@ def change_user():
         if len(demo_patch) > 1:
             _call("post", IP + "/student/modify", json_body=demo_patch)
 
-        if changes.get("hours") is not None:
-            _call("post", IP + "/student/modify", json_body={"id": student_id, "hours": float(changes["hours"])})
+    if changes.get("hours") is not None:
+        _call("post", IP + "/student/modify", json_body={"id": student_id, "hours": float(changes["hours"])})
 
-    if changes.get("date") is not None and changes["date"] != 0:
-        ts_sec = int(changes["date"]);
-        dt = datetime.utcfromtimestamp(ts_sec);
-        att_type = "NORMAL" if changes.get("attendance") == "present" else "EXCUSED"
-        att_body = {
+    # Nur wenn der Status wirklich geändert wurde - das Popup schickt das Feld
+    # sonst gar nicht mit. /attendances/set ersetzt den Tag, statt wie früher
+    # /seed/attendance einen weiteren Eintrag danebenzulegen.
+    att_type = {"present": "NORMAL", "excused": "EXCUSED", "absent": "AWAY", "none": "NONE"}.get(changes.get("attendance"))
+    if changes.get("date") and att_type:
+        dt = datetime.utcfromtimestamp(int(changes["date"]));
+        r = _call("post", IP + "/attendances/set", json_body={
             "id": student_id,
             "day": dt.day,
             "month": dt.month,
             "year": dt.year,
-            "login": ts_sec * 1000,
-            "logout": ts_sec * 1000 + 1000,
             "type": att_type,
-        }
-        _call("post", IP + "/seed/attendance", json_body=att_body);
+        });
+        if r is None:
+            return "fail"
 
     return "success"
 
@@ -553,6 +733,15 @@ def student_names():
     if r is None: return flask.make_response("backend unavailable", 503)
     students = json.loads(r.text)["students"]
     return [{"id": s["id"], "firstName": s["firstName"], "lastName": s["lastName"]} for s in students]
+
+
+@app.route("/student_attendances", methods=["POST"])
+def student_attendances():
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+
+    student_id = flask.request.get_json().get("id")
+    return day_statuses(get_attendances(student_id))
 
 
 @app.route("/get_users", methods=["POST"])
@@ -646,33 +835,25 @@ def delete_course():
 
 
 GENDERS = [
-    "ABINARY","AGENDER","AGENDERFLUID","AGENDERFLUX","GENDERBLANK","GENDERFREE",
-    "POLYAGENDER","AMBIGENDER","ANDROGYNE","ANDROGYNOUS","APORAGENDER","AUTIGENDER",
-    "BAKLA","BIGENDER","BINARY","BISSU","BUTCH","CALABAI","CALALAI","CIS","CISGENDER",
-    "CIS_FEMALE","CIS_MALE","CIS_MAN","CIS_WOMAN","DEMI_BOY","DEMIFLUX","DEMIGENDER",
-    "DEMI_GIRL","DEMI_GUY","DEMI_MAN","DEMI_WOMAN","DUAL_GENDER","EUNUCH","FA_AFAFINE",
-    "FEMALE","FEMALE_TO_MALE","FEMME","FTM","F14TOMCAT","GENDER_BENDER","GENDER_DIVERSE",
-    "GENDER_GIFTED","GENDERFAE","GENDERFLUID","GENDERFLUX","GENDERFUCK","GENDERLESS",
-    "GENDER_NONCONFORMING","GENDERQUEER","GENDER_QUESTIONING","GENDER_VARIANT","GRAYGENDER",
-    "HIJRA","HELICOPTER","INTERGENDER","INTERSEX","IPSOGENDER","KATHOEY","MAHU","MALE",
-    "MALE_TO_FEMALE","MAN","MAN_OF_TRANS_EXPERIENCE","MAVERIQUE","META_GENDER","MTF",
-    "MULTIGENDER","MUXE","NEITHER","NEUROGENDER","NEUTROIS","NON_BINARY",
-    "NON_BINARY_TRANSGENDER","OMNIGENDER","OTHER","PANGENDER",
-    "PERSON_OF_TRANSGENDERED_EXPERIENCE","POLYGENDER","QUEER","SEKHET","THIRD_GENDER",
-    "TRANS","TRANS_FEMALE","TRANS_MALE","TRANS_MAN","TRANS_PERSON","TRANS_WOMAN",
-    "TRANSGENDER","TRANSGENDER_FEMALE","TRANSGENDER_MALE","TRANSGENDER_MAN",
-    "TRANSGENDER_PERSON","TRANSGENDER_WOMAN","TRANSFEMININE","TRANSMASELINE","TRANSSEXUAL",
-    "TRANSSEXUAL_FEMALE","TRANSSEXUAL_MALE","TRANSSEXUAL_MAN","TRANSSEXUAL_PERSON",
-    "TRANSSEXUAL_WOMAN","TRAVESTI","TRIGENDER","TUMTUM","TWO_SPIRIT","VAKASALEWALEWA",
-    "WARIA","WINKTE","WOMAN","WOMAN_OF_TRANS_EXPERIENCE","X_GENDER","X_JENDA","XENOGENDER",
-    "YAOI","YAOIGENDER","YURI","YURIGENDER","ZENGENDER",
+    # Muss mit dem Gender-Enum des Backends übereinstimmen (Gender.java) - sonst
+    # bietet die Auswahl Werte an, die beim Anlegen abgelehnt werden.
+    "FEMALE", "MALE", "NON_BINARY", "AGENDER", "BIGENDER", "GENDERFLUID",
+    "GENDERQUEER", "TRANSGENDER", "CISGENDER", "INTERSEX", "TWO_SPIRIT",
 ]
 
 @app.route("/genders", methods=["POST"])
 def genders():
-    if checkAuth(flask.request.cookies.get("auth")):
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return "n/a";
+    # Maßgeblich ist das Gender-Enum des Backends. Die lokale GENDERS-Liste ist
+    # nur noch Notfall-Fallback: sie war veraltet, wodurch die Auswahl Werte
+    # anbot (z.B. "ABINARY"), die das Backend beim Anlegen ablehnt.
+    r = _call("get", IP + "/genders")
+    if r is None:
         return GENDERS;
-    return "n/a";
+    # Das Backend liefert die Werte zeilenweise als reinen Text.
+    values = [line.strip() for line in r.text.splitlines() if line.strip()]
+    return values or GENDERS;
 
 
 def inRange(fromm, to, x):
@@ -713,29 +894,25 @@ def csv():
     rows = []
 
     for student in students:
-        atts = get_attendances(student["id"])
-        present_days = set()
-        for att in atts:
-            if att.get("type") == "AWAY":
-                continue
-            date_str = f"{att['year']}-{att['month']:02d}-{att['day']:02d}"
-            if inRange(fromm, to, date_str):
-                all_days.add(date_str)
-                present_days.add(date_str)
+        statuses = {d: s for d, s in day_statuses(get_attendances(student["id"])).items()
+                    if inRange(fromm, to, d)}
+        all_days.update(statuses)
         rows.append({
             "id": student["id"],
             "name": student["firstName"] + " " + student["lastName"],
-            "days": present_days,
+            "days": statuses,
         })
 
     sorted_days = sorted(all_days)
+    # Entschuldigt ist nicht dasselbe wie anwesend - früher stand dort "Ja".
+    labels = {"normal": "Ja", "excused": "Entschuldigt", "absent": "Nein"}
 
     with open('./students.csv', 'w', newline='') as csvfile:
         writer = csvBib.writer(csvfile, delimiter=';')
         writer.writerow(['Index', 'Name'] + sorted_days)
         for row in rows:
             line = [str(row["id"]), row["name"]] + \
-                   ["Ja" if d in row["days"] else "Nein" for d in sorted_days]
+                   [labels[row["days"].get(d, "absent")] for d in sorted_days]
             writer.writerow(line)
 
     return send_file("students.csv", as_attachment=True)

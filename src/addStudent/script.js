@@ -45,24 +45,74 @@ function change_type() {
 }
 
 
-function submit() {
-    document.getElementById("message").text = "Verarbeitung...";
+// Zeigt die Rückfrage und liefert das Ergebnis als Promise.
+function confirmNoCard() {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById("confirm-overlay");
+        const ok = document.getElementById("confirm-ok");
+        const cancel = document.getElementById("confirm-cancel");
+
+        function close(answer) {
+            overlay.classList.add("hidden");
+            ok.removeEventListener("click", onOk);
+            cancel.removeEventListener("click", onCancel);
+            overlay.removeEventListener("click", onBackdrop);
+            document.removeEventListener("keydown", onKey);
+            resolve(answer);
+        }
+        function onOk() { close(true); }
+        function onCancel() { close(false); }
+        function onBackdrop(e) { if (e.target === overlay) close(false); }
+        function onKey(e) { if (e.key === "Escape") close(false); }
+
+        ok.addEventListener("click", onOk);
+        cancel.addEventListener("click", onCancel);
+        overlay.addEventListener("click", onBackdrop);
+        document.addEventListener("keydown", onKey);
+
+        overlay.classList.remove("hidden");
+        cancel.focus();
+    });
+}
+
+async function submit() {
+    const message = document.getElementById("message");
 
     type = document.getElementById("type").value;
 
-    firstName = document.getElementById("firstName").value;
-    lastName = document.getElementById("lastName").value;
-    rfid = document.getElementById("rfid").checked ? "true" : "false";
+    firstName = document.getElementById("firstName").value.trim();
+    lastName = document.getElementById("lastName").value.trim();
+    const wantsCard = document.getElementById("rfid").checked;
+    rfid = "false";
     gender = document.getElementById("gender").value;
-    birthday = new Date(document.getElementById("birthday").value).getTime();
-    nr = parseInt(document.getElementById("nr").value);
+    // Leere Zahlenfelder ergeben NaN, das JSON.stringify zu null macht - damit
+    // lehnt das Backend den ganzen Datensatz ab. Deshalb auf 0 zurückfallen.
+    const birthdayRaw = new Date(document.getElementById("birthday").value).getTime();
+    birthday = Number.isNaN(birthdayRaw) ? 0 : birthdayRaw;
+    nr = parseInt(document.getElementById("nr").value) || 0;
     street = document.getElementById("street").value;
     city = document.getElementById("city").value;
-    zip = parseInt(document.getElementById("zip").value);
+    zip = parseInt(document.getElementById("zip").value) || 0;
     country = document.getElementById("country").value;
 
     email = document.getElementById("email").value;
     password = document.getElementById("password").value;
+
+    if (!firstName || !lastName) {
+        message.innerText = "Vor- und Nachname sind erforderlich.";
+        return;
+    }
+
+    // Mit Karte wird der Schüler nur vorgemerkt - angelegt wird er erst, wenn
+    // die Karte am Automaten gescannt wird. Ohne Karte wird sofort angelegt,
+    // dann aber mit Rückfrage.
+    rfid = wantsCard ? "true" : "false";
+    if (!wantsCard && !(await confirmNoCard())) {
+        message.innerText = "";
+        return;
+    }
+
+    message.innerText = "Verarbeitung…";
 
     level = "NORMAL";
     if (type=="ADMIN") {level="ADMIN"};
@@ -90,12 +140,17 @@ function submit() {
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
             }
-        }).then((response) => {
-            response.text().then((text) => {
-                if (text == "success") {
-                    document.getElementById("message").innerText = "Erfolgreich hinzugefügt!";
-                }
-            });
+        }).then((response) => response.text()).then((text) => {
+            if (text != "success") {
+                message.innerText = "Konnte nicht angelegt werden: " + text;
+                return;
+            }
+            message.innerText = wantsCard
+                ? "Angelegt. Chipkarte jetzt über „Lehrkräfte → bearbeiten → Karte scannen“ zuweisen."
+                : "Erfolgreich hinzugefügt!";
+        }).catch((err) => {
+            console.error("Anlegen fehlgeschlagen:", err);
+            message.innerText = "Konnte nicht angelegt werden.";
         });
     } else {
         const kursEl = document.getElementById("kurs");
@@ -120,12 +175,19 @@ function submit() {
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
             }
-        }).then((response) => {
-            response.text().then((text) => {
-                if (text == "success") {
-                    document.getElementById("message").innerText = "Erfolgreich hinzugefügt!";
-                }
-            });
+        }).then((response) => response.text()).then((text) => {
+            if (text === "queued") {
+                message.innerText = `${firstName} ${lastName} ist vorgemerkt. `
+                    + "Jetzt am Automaten „Nutzer hinzufügen“ öffnen und die "
+                    + "Chipkarte scannen - damit ist die Person angelegt.";
+                return;
+            }
+            message.innerText = text === "success"
+                ? "Erfolgreich hinzugefügt!"
+                : "Konnte nicht angelegt werden: " + text;
+        }).catch((err) => {
+            console.error("Anlegen fehlgeschlagen:", err);
+            message.innerText = "Konnte nicht angelegt werden.";
         });
     }
 }

@@ -69,6 +69,13 @@ input {
     width: 4%;
 }
 
+#rfid-hint {
+    margin: -4px 0 10px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #4a4a4a;
+}
+
 #adress {
     background-color: #aca7a7;
     padding: 20px;
@@ -79,4 +86,78 @@ input {
     min-width: fit-content;
     max-width: 400px;
     height:fit-content;
+}
+
+/* Rückfrage, bevor jemand ohne Chipkarte angelegt wird. */
+#confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background-color: rgba(20, 20, 20, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+#confirm-overlay.hidden {
+    display: none;
+}
+
+#confirm-box {
+    background-color: #f7f7f5;
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    width: min(420px, 100%);
+    padding: 20px 22px;
+    box-sizing: border-box;
+}
+
+#confirm-box h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    color: #333;
+}
+
+#confirm-box p {
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #555;
+}
+
+#confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+#confirm-actions button {
+    width: auto;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+}
+
+#confirm-cancel:hover {
+    background-color: #ececea;
+}
+
+/* Zwei IDs, sonst gewinnt "#confirm-actions button" (ID + Element) und der
+   Knopf bleibt weiß. */
+#confirm-actions #confirm-ok {
+    background-color: #7aae3e;
+    border-color: #7aae3e;
+    color: #fff;
+}
+
+#confirm-actions #confirm-ok:hover {
+    background-color: #476920;
+    border-color: #476920;
 }

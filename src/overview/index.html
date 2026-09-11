@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>B.A.M.B.I. v.0.1</title>
-		<meta name="viewport" contetn="width=device-width, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<script src="/page/script.js"></script>
 		<link rel="stylesheet" href="page/styles.css">
     </head>
@@ -13,47 +13,73 @@
 				<tr>
 					<th>Name</th>
 					<th>Tag</th>
-					<th>Teilnehmende</th>
+					<th>Lehrkraft</th>
+					<th>Mitglieder</th>
 				</tr>
 			</table>
 		</main>
 		<div id="popup" class="hidden">
-			<button id="close" onclick="closePopup()">Schließen</button>
-			<div class="row">
-				<p class="lable">Name: </p>
-				<input id="name">
-			</div>
-			<div class="row">
-	        <label for="day">Tag:</label>
-            <select id="day" name="day">
-                <option value="MONDTAG">Montag</option>
-                <option value="DEINSTAG">Dienstag</option>
-                <option value="METTWOCH">Mittwoch</option>
-                <option value="DÖNNERSTAG">Donnerstag</option>
-                <option value="REINTAG">Freitag</option>
-                <option value="SAUFTAG">Samstag</option>
-                <option value="SONNDAG">Sonntag</option>
-            </select>
-			</div>
-			<div class="row">
-                <p class="lable">Teilnehmende: </p>
-                <div id="student-select">
-                    <input id="student-search" type="text" placeholder="Suchen…" autocomplete="off">
-                    <div id="student-options"></div>
-                </div>
-			</div>
-            <div class="row">
-                <p class="lable">Lehrkräfte: </p>
-                <div id="user-select">
-                    <input id="user-search" type="text" placeholder="Suchen…" autocomplete="off">
-                    <div id="user-options"></div>
-                </div>
-            </div>
-			<div class="row">
-				<button id="save">Speichern</button>
-				<button id="delete">Löschen</button>
+			<div class="modal-panel">
+				<nav class="modal-rail">
+					<button type="button" class="active" data-jump="sec-daten"><span class="dot"></span>Kursdaten</button>
+					<button type="button" data-jump="sec-teilnehmende"><span class="dot"></span>Teilnehmende</button>
+					<button type="button" data-jump="sec-lehrkraefte"><span class="dot"></span>Lehrkräfte</button>
+				</nav>
+				<div class="modal-main">
+					<div class="modal-head">
+						<div class="modal-head-text">
+							<h3>Kurs bearbeiten</h3>
+							<p id="course-meta" class="modal-subtitle"></p>
+						</div>
+						<button id="close" class="modal-close" onclick="closePopup()" aria-label="Schließen">✕</button>
+					</div>
+					<div class="modal-scroll">
+						<section class="modal-section" id="sec-daten">
+							<p class="sec-title">Kursdaten</p>
+							<div class="row">
+								<p class="lable">Name: </p>
+								<input id="name">
+							</div>
+							<div class="row">
+								<label for="day">Tag:</label>
+								<select id="day" name="day">
+									<option value="MONDTAG">Montag</option>
+									<option value="DEINSTAG">Dienstag</option>
+									<option value="METTWOCH">Mittwoch</option>
+									<option value="DÖNNERSTAG">Donnerstag</option>
+									<option value="REINTAG">Freitag</option>
+									<option value="SAUFTAG">Samstag</option>
+									<option value="SONNDAG">Sonntag</option>
+								</select>
+							</div>
+						</section>
+
+						<section class="modal-section" id="sec-teilnehmende">
+							<p class="sec-title">Teilnehmende</p>
+							<div class="row">
+								<div id="student-select">
+									<input id="student-search" type="text" placeholder="Suchen…" autocomplete="off">
+									<div id="student-options"></div>
+								</div>
+							</div>
+						</section>
+
+						<section class="modal-section" id="sec-lehrkraefte">
+							<p class="sec-title">Lehrkräfte</p>
+							<div class="row">
+								<div id="user-select">
+									<input id="user-search" type="text" placeholder="Suchen…" autocomplete="off">
+									<div id="user-options"></div>
+								</div>
+							</div>
+						</section>
+					</div>
+					<div class="modal-foot">
+						<button id="delete">Löschen</button>
+						<button id="save">Speichern</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	</body>
 </html>
-

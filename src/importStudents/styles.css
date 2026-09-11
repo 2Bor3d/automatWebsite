@@ -1,0 +1,230 @@
+.hidden {
+	display: none;
+}
+
+#container {
+	background-color: #d2cccc;
+	padding: 20px;
+	border-radius: 8px;
+	margin: 2%;
+	max-width: 960px;
+	height: fit-content;
+}
+
+h2 {
+	margin: 0 0 8px;
+	font-size: 20px;
+}
+
+.intro {
+	margin: 0 0 16px;
+	line-height: 1.5;
+	max-width: 70ch;
+}
+
+.intro a {
+	color: #476920;
+	font-weight: 600;
+}
+
+/* Das echte Datei-Feld ist versteckt; das Label davor ist der Knopf. */
+#file {
+	display: none;
+}
+
+#file-label {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	cursor: pointer;
+}
+
+#file-button {
+	padding: 9px 16px;
+	background-color: #7aae3e;
+	color: white;
+	border-radius: 4px;
+	font-size: 15px;
+}
+
+#file-label:hover #file-button {
+	background-color: #476920;
+}
+
+#file-name {
+	color: #444;
+}
+
+#summary {
+	margin: 16px 0 8px;
+	font-weight: 600;
+}
+
+#preview-wrap {
+	overflow-x: auto;
+	background: #fff;
+	border-radius: 6px;
+}
+
+#preview {
+	border-collapse: collapse;
+	width: 100%;
+	font-size: 14px;
+}
+
+#preview th, #preview td {
+	border: 1px solid #ddd;
+	padding: 6px 8px;
+	text-align: left;
+	white-space: nowrap;
+}
+
+#preview th {
+	background-color: #eef6e3;
+}
+
+#preview td:first-child {
+	color: #888;
+	font-variant-numeric: tabular-nums;
+}
+
+.chip {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: #fff;
+}
+
+.chip-ready {
+	background-color: #7aae3e;
+}
+
+.chip-ok {
+	background-color: #27ae60;
+}
+
+.chip-warn {
+	background-color: #e67e22;
+}
+
+.chip-error {
+	background-color: #c0392b;
+}
+
+#actions {
+	margin-top: 16px;
+}
+
+#card-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+}
+
+.hint {
+	margin: 6px 0 0;
+	font-size: 13px;
+	line-height: 1.45;
+	color: #4a4a4a;
+	max-width: 70ch;
+}
+
+#import {
+	margin-top: 14px;
+	padding: 10px 18px;
+	background-color: #7aae3e;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+#import:hover {
+	background-color: #476920;
+}
+
+#import:disabled {
+	background-color: #a9b59e;
+	cursor: wait;
+}
+
+#message {
+	margin: 14px 0 0;
+	line-height: 1.5;
+}
+
+/* Rückfrage vor dem Import ohne Karten - wie bei "Nutzer Hinzufügen". */
+#confirm-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	background-color: rgba(20, 20, 20, 0.45);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+#confirm-overlay.hidden {
+	display: none;
+}
+
+#confirm-box {
+	background-color: #f7f7f5;
+	border-radius: 10px;
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+	width: min(420px, 100%);
+	padding: 20px 22px;
+	box-sizing: border-box;
+}
+
+#confirm-box h3 {
+	margin: 0 0 8px;
+	font-size: 17px;
+	color: #333;
+}
+
+#confirm-box p {
+	margin: 0 0 18px;
+	font-size: 14px;
+	line-height: 1.5;
+	color: #555;
+}
+
+#confirm-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+#confirm-actions button {
+	font: inherit;
+	font-size: 13.5px;
+	font-weight: 600;
+	padding: 8px 16px;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+	background: #fff;
+	color: #333;
+	cursor: pointer;
+}
+
+#confirm-cancel:hover {
+	background-color: #ececea;
+}
+
+/* Zwei IDs, damit die Regel "#confirm-actions button" oben nicht gewinnt. */
+#confirm-actions #confirm-ok {
+	background-color: #7aae3e;
+	border-color: #7aae3e;
+	color: #fff;
+}
+
+#confirm-actions #confirm-ok:hover {
+	background-color: #476920;
+	border-color: #476920;
+}

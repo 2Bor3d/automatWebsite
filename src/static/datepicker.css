@@ -1,0 +1,170 @@
+.dp-input {
+	cursor: pointer;
+	background-color: #fff;
+}
+
+.dp-popup {
+	position: fixed;
+	z-index: 2000;
+	width: 240px;
+	background-color: #fff;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+	padding: 10px;
+	box-sizing: border-box;
+	font-family: inherit;
+}
+
+.dp-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 6px;
+}
+
+.dp-month-label {
+	font-size: 13px;
+	font-weight: 700;
+	color: #333;
+}
+
+.dp-select {
+	font: inherit;
+	font-size: 12.5px;
+	font-weight: 700;
+	color: #333;
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	padding: 3px 4px;
+	cursor: pointer;
+}
+
+.dp-select:hover {
+	border-color: #7aae3e;
+}
+
+.dp-month-select {
+	flex: 1;
+	min-width: 0;
+}
+
+.dp-year-select {
+	width: 68px;
+}
+
+.dp-nav {
+	border: none;
+	background: transparent;
+	font-size: 16px;
+	line-height: 1;
+	color: #476920;
+	cursor: pointer;
+	padding: 2px 8px;
+	border-radius: 5px;
+}
+
+.dp-nav:hover {
+	background-color: #eef6e3;
+}
+
+.dp-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	margin-bottom: 2px;
+}
+
+.dp-weekdays span {
+	text-align: center;
+	font-size: 11px;
+	color: #888;
+}
+
+.dp-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 2px;
+}
+
+.dp-day {
+	position: relative;
+	border: none;
+	background: transparent;
+	border-radius: 5px;
+	font-size: 12.5px;
+	padding: 6px 0;
+	cursor: pointer;
+	color: #333;
+}
+
+.dp-day:hover {
+	background-color: #eef6e3;
+}
+
+.dp-day.dp-outside {
+	color: #ccc;
+}
+
+.dp-day.dp-today-marker {
+	font-weight: 700;
+	color: #476920;
+}
+
+.dp-day.dp-selected {
+	background-color: #7aae3e;
+	color: #fff;
+	font-weight: 700;
+}
+
+.dp-day.dp-status-normal::after,
+.dp-day.dp-status-excused::after,
+.dp-day.dp-status-absent::after {
+	content: "";
+	position: absolute;
+	bottom: 2px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+}
+
+.dp-day.dp-status-normal::after {
+	background-color: #27ae60;
+}
+
+.dp-day.dp-status-excused::after {
+	background-color: #e67e22;
+}
+
+.dp-day.dp-status-absent::after {
+	background-color: #c0392b;
+}
+
+.dp-day.dp-selected::after {
+	background-color: #fff;
+}
+
+.dp-footer {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 8px;
+	padding-top: 6px;
+	border-top: 1px dashed #ddd;
+}
+
+.dp-footer button {
+	font: inherit;
+	font-size: 12px;
+	border: none;
+	background: transparent;
+	color: #476920;
+	cursor: pointer;
+	padding: 3px 6px;
+	border-radius: 5px;
+}
+
+.dp-footer button:hover {
+	background-color: #eef6e3;
+}
