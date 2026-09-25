@@ -7,7 +7,7 @@
 		 <script src="script.js"></script>
 		 <link rel="stylesheet" href="styles.css">
     </head>
-    <body>
+    <body onload="checkSetup()">
 		<!--div id="title"-->
 			<header id="header">
 				<!-- <h1> -->
@@ -25,7 +25,33 @@
 			<input type="password" placeholder="password..." name="pwd" 
 				onkeyup="pressed(event, 'pwd')" id="pwd"></input>
 			<button onclick="login()">login</button>
+			<div class="msg" id="login-msg" role="alert"></div>
 		</div>
+
+		<!-- Nur solange es noch gar keinen Zugang gibt (siehe script.js). -->
+		<form id="setup" class="hidden" novalidate>
+			<h2>Ersten Admin-Zugang anlegen</h2>
+			<div class="intro">
+				Es gibt noch keinen Zugang. Wer sich hier als Erstes einträgt,
+				wird Administrator*in und kann danach weitere Lehrkräfte anlegen.
+			</div>
+			<label for="s-first">Vorname</label>
+			<input id="s-first" autocomplete="given-name" required>
+			<label for="s-last">Nachname</label>
+			<input id="s-last" autocomplete="family-name" required>
+			<label for="s-gender">Geschlecht</label>
+			<select id="s-gender" required>
+				<option value="">Bitte wählen</option>
+			</select>
+			<label for="s-mail">E-Mail (zum Anmelden)</label>
+			<input id="s-mail" type="email" autocomplete="username" required>
+			<label for="s-pw1">Passwort (mindestens 8 Zeichen)</label>
+			<input id="s-pw1" type="password" autocomplete="new-password" required>
+			<label for="s-pw2">Passwort wiederholen</label>
+			<input id="s-pw2" type="password" autocomplete="new-password" required>
+			<button type="submit" id="s-submit">Zugang anlegen</button>
+			<div class="msg" id="setup-msg" role="alert"></div>
+		</form>
 		</main>
 		<footer>
 			<p>&copy; Annika Reinhardt, David Glänzel & Ben Schnorrenberger</p>

@@ -212,22 +212,76 @@ def login():
     for user in users:
         pw_ok = bcrypt.checkpw(attempt["password"].encode(), user["password"].encode())
         if user["mail"] == attempt["username"] and pw_ok:
-            tutor_id = user["id"]
-            courses_user = [c for c in courses_file
-                            if any(t["id"] == tutor_id for t in c.get("tutor", []))]
-            random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
-            logedin[random_bytes] = {
-                "id": user["id"],
-                "username": user["mail"],
-                "admin": user["level"] == "ADMIN",
-                "courses": courses_user,
-                "position": "list",
-                "sub": {},
-            };
-            response = flask.make_response("success", 200);
-            response.set_cookie("auth", random_bytes);
+            response = start_session(user, courses_file)
             break;
     return response;
+
+
+def start_session(user: dict, courses_file: list):
+    """Meldet eine Lehrkraft an: Sitzung anlegen und Cookie setzen."""
+    tutor_id = user["id"]
+    courses_user = [c for c in courses_file
+                    if any(t["id"] == tutor_id for t in c.get("tutor", []))]
+    random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
+    logedin[random_bytes] = {
+        "id": user["id"],
+        "username": user["mail"],
+        "admin": user["level"] == "ADMIN",
+        "courses": courses_user,
+        "position": "list",
+        "sub": {},
+    };
+    response = flask.make_response("success", 200);
+    response.set_cookie("auth", random_bytes);
+    return response
+
+
+# ---------- Erster Admin-Zugang ----------
+# Solange es keine einzige Lehrkraft gibt, darf die erste Person auf der Website
+# einen Admin-Zugang anlegen. Das Backend prüft das beim Anlegen selbst noch
+# einmal (atomar) - hier wird nur weitergereicht.
+
+@app.route("/setup_status")
+def setup_status():
+    r = _call("get", IP + "/teacher/exists")
+    if r is None:
+        return flask.make_response({"error": "backend unavailable"}, 503)
+    return {"needsSetup": not json.loads(r.text)["exists"], "genders": GENDERS}
+
+
+@app.route("/setup_admin", methods=["POST"])
+def setup_admin():
+    data = flask.request.get_json(silent=True) or {}
+    body = {
+        "firstName": str(data.get("firstName", "")).strip(),
+        "lastName": str(data.get("lastName", "")).strip(),
+        "email": str(data.get("email", "")).strip(),
+        "password": str(data.get("password", "")),
+        "gender": str(data.get("gender", "")),
+    }
+    if not body["firstName"] or not body["lastName"]:
+        return flask.make_response("Vor- und Nachname fehlen.", 400)
+    if "@" not in body["email"]:
+        return flask.make_response("Bitte eine gültige E-Mail-Adresse eingeben.", 400)
+    if len(body["password"]) < 8:
+        return flask.make_response("Das Passwort muss mindestens 8 Zeichen haben.", 400)
+    if body["gender"] not in GENDERS:
+        return flask.make_response("Bitte ein Geschlecht auswählen.", 400)
+
+    try:
+        r = hmac_client.post(IP + "/teacher/createFirstAdmin", json_body=body)
+    except Exception as e:
+        print(f"[API ERROR] createFirstAdmin → {type(e).__name__}: {e}")
+        return flask.make_response("Der Automat ist nicht erreichbar.", 503)
+    if r.status_code == 409:
+        return flask.make_response("Es gibt schon einen Zugang - bitte anmelden.", 409)
+    if r.status_code != 200:
+        return flask.make_response("Der Zugang konnte nicht angelegt werden.", 500)
+
+    user = json.loads(r.text)
+    courses = _call("get", IP + "/course/allCourses")
+    courses_file = json.loads(courses.text)["courses"] if courses is not None else []
+    return start_session(user, courses_file)
 
 
 @app.route("/username", methods=["POST"])
