@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anleitung - MINT-Zentrum Seeheim</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<style>
+    :root {
+        --green: #7aae3e;
+        --green-dark: #476920;
+        --green-wash: #eef6e3;
+        --ink: #23281f;
+        --muted: #5d6657;
+        --line: #dfe3d9;
+        --paper: #fbfbf9;
+        --present: #27ae60;
+        --excused: #e67e22;
+        --absent: #c0392b;
+        --none: #d5d5d5;
+        --lcd-bg: #9fc33a;
+        --lcd-ink: #1d2a10;
+        --serif: Charter, "Bitstream Charter", "Noto Serif", "DejaVu Serif", Georgia, serif;
+        --sans: system-ui, "Segoe UI", "Noto Sans", "DejaVu Sans", Arial, sans-serif;
+        --mono: "DejaVu Sans Mono", "Noto Sans Mono", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-padding-top: 70px; }
+
+    body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font: 17px/1.6 var(--sans);
+    }
+
+    a { color: var(--green-dark); }
+    a:focus-visible, summary:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+
+    /* Kopfzeile wie auf der übrigen Website */
+    header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 50px;
+        padding: 0 20px;
+        background: var(--green);
+        color: #fff;
+    }
+
+    header img { height: 30px; }
+    header .site { font: 26px/1 var(--serif); }
+    header .login { margin-left: auto; color: #fff; font-size: 15px; }
+
+    /* Aufmacher: das Display der Station */
+    .hero {
+        background: var(--green-wash);
+        border-bottom: 1px solid var(--line);
+    }
+
+    .hero-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 40px 24px 36px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 40px;
+        align-items: center;
+    }
+
+    .hero h1 {
+        margin: 0 0 12px;
+        font: 600 clamp(32px, 5vw, 46px)/1.1 var(--serif);
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+    }
+
+    .hero p { margin: 0; max-width: 46ch; color: var(--muted); font-size: 18px; }
+
+    .lcd {
+        padding: 14px;
+        border-radius: 10px;
+        background: #2d3328;
+        box-shadow: 0 1px 0 #fff;
+    }
+
+    .lcd pre {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 4px;
+        background: var(--lcd-bg);
+        color: var(--lcd-ink);
+        font: 600 19px/1.35 var(--mono);
+        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.18);
+    }
+
+    .lcd figcaption { margin-top: 8px; color: #c9d2bf; font-size: 13px; text-align: center; }
+
+    /* Inhalt mit Inhaltsverzeichnis */
+    .layout {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 48px;
+    }
+
+    nav.toc {
+        position: sticky;
+        top: 74px;
+        align-self: start;
+        font-size: 15px;
+    }
+
+    nav.toc p { margin: 0 0 6px; font-weight: 600; }
+    nav.toc ol { margin: 0 0 18px; padding: 0; list-style: none; }
+    nav.toc li { margin: 2px 0; }
+    nav.toc a { display: block; padding: 3px 10px; border-left: 3px solid transparent; text-decoration: none; color: var(--muted); }
+    nav.toc a:hover { color: var(--green-dark); border-left-color: var(--green); }
+    /* Auf breiten Bildschirmen immer offen, die Überschrift "Inhalt" entfällt. */
+    nav.toc summary { display: none; }
+
+    main { max-width: 68ch; }
+
+    section { margin-bottom: 56px; }
+
+    h2 {
+        margin: 0 0 6px;
+        font: 600 30px/1.2 var(--serif);
+        text-wrap: balance;
+    }
+
+    .who { margin: 0 0 20px; color: var(--muted); }
+
+    h3 { margin: 30px 0 8px; font: 600 21px/1.3 var(--serif); }
+
+    p, li { text-wrap: pretty; }
+    ol.steps { padding-left: 1.4em; }
+    ol.steps li { margin: 6px 0; padding-left: 4px; }
+
+    kbd, .ui {
+        padding: 0 5px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: #fff;
+        font: 0.92em var(--sans);
+        white-space: nowrap;
+    }
+
+    .note {
+        margin: 16px 0;
+        padding: 12px 16px;
+        border-left: 4px solid var(--green);
+        background: var(--green-wash);
+    }
+
+    .note.warn { border-left-color: var(--excused); background: #fdf1e6; }
+
+    /* Farblegende der Anwesenheit */
+    .legend { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; }
+    .legend li { display: flex; align-items: center; gap: 10px; }
+    .sq { width: 16px; height: 16px; border-radius: 3px; flex: none; }
+    .sq.present { background: var(--present); }
+    .sq.excused { background: var(--excused); }
+    .sq.absent { background: var(--absent); }
+    .sq.none { background: var(--none); }
+
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 16px; }
+    th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    th { font-weight: 600; }
+    td:first-child { white-space: nowrap; }
+
+    /* Häufige Probleme */
+    details { border-bottom: 1px solid var(--line); }
+    details summary {
+        cursor: pointer;
+        padding: 12px 0;
+        font-weight: 600;
+        list-style-position: outside;
+    }
+    details > div { padding: 0 0 14px; }
+    details > div p:first-child { margin-top: 0; }
+
+    footer {
+        padding: 18px 24px;
+        background: #7b7a7a;
+        color: #fff;
+        font-size: 14px;
+        text-align: right;
+    }
+
+    @media (max-width: 820px) {
+        .hero-inner { grid-template-columns: 1fr; gap: 24px; }
+        .lcd { justify-self: start; }
+        .lcd pre { font-size: 15px; }
+        .layout { grid-template-columns: 1fr; gap: 16px; padding-top: 20px; }
+        nav.toc { position: static; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+        nav.toc summary { display: list-item; list-style-position: inside; padding: 10px 14px; font-weight: 600; cursor: pointer; }
+        nav.toc details > :not(summary) { margin-left: 14px; margin-right: 14px; }
+        header { padding: 0 14px; }
+        header .site { font-size: 20px; white-space: nowrap; }
+        header .login { white-space: nowrap; font-size: 14px; }
+    }
+
+    @media print {
+        header, nav.toc { display: none; }
+        .layout { display: block; }
+    }
+</style>
+</head>
+<body>
+<header>
+    <img src="/static/LogoBambiWebsite.png" alt="">
+    <span class="site">MINT-Zentrum Seeheim</span>
+    <a class="login" href="/">Anmelden</a>
+</header>
+
+<div class="hero">
+    <div class="hero-inner">
+        <div>
+            <h1>So funktioniert der Süßigkeitenautomat</h1>
+            <p>Wer im MINT-Zentrum ist, sammelt Stunden. Mit den Stunden gibt es am
+                Automaten Süßigkeiten. Diese Seite erklärt alles - von der Karte an der
+                Station bis zur Verwaltung auf der Website.</p>
+        </div>
+        <figure class="lcd" aria-label="Beispiel: Anzeige der Station beim Kommen">
+            <pre>Herzlich Willkommen,
+Anna Beispiel
+im MINT-Zentrum!
+Stunden: 12.5</pre>
+            <figcaption>Das zeigt die Station, wenn du kommst</figcaption>
+        </figure>
+    </div>
+</div>
+
+<div class="layout">
+    <nav class="toc" aria-label="Inhalt">
+        <details id="toc-box" open>
+        <summary>Inhalt</summary>
+        <p>Für alle</p>
+        <ol>
+            <li><a href="#station">An der Station</a></li>
+            <li><a href="#automat">Am Automaten</a></li>
+            <li><a href="#stunden">Wie Stunden entstehen</a></li>
+        </ol>
+        <p>Lehrkräfte</p>
+        <ol>
+            <li><a href="#website">Die Website</a></li>
+            <li><a href="#anwesenheit">Anwesenheit eintragen</a></li>
+        </ol>
+        <p>Admins</p>
+        <ol>
+            <li><a href="#nutzer">Nutzer anlegen</a></li>
+            <li><a href="#kurse">Kurse und Lehrkräfte</a></li>
+            <li><a href="#export">Daten exportieren</a></li>
+            <li><a href="#automat-admin">Am Automaten verwalten</a></li>
+            <li><a href="#technik">Technik</a></li>
+        </ol>
+        <p>Hilfe</p>
+        <ol>
+            <li><a href="#probleme">Wenn etwas nicht klappt</a></li>
+        </ol>
+        </details>
+    </nav>
+
+    <main>
+        <section id="station">
+            <h2>An der Station</h2>
+            <p class="who">Für alle: so meldest du dich beim Kommen und Gehen.</p>
+            <ol class="steps">
+                <li>Halte deine Karte an den Leser der Station. Ein kurzer Piep heißt: Karte gelesen.</li>
+                <li>Auf dem Display steht <span class="ui">Herzlich Willkommen</span> - du bist eingebucht.</li>
+                <li>Wenn du gehst, hältst du die Karte noch einmal hin. Jetzt steht dort
+                    <span class="ui">Auf Wiedersehen</span> und deine neuen Stunden.</li>
+            </ol>
+            <p>Hältst du die Karte zweimal kurz hintereinander hin, zählt das nur einmal - du wirst
+                nicht aus Versehen gleich wieder ausgebucht.</p>
+            <div class="note">Drei kurze Pieptöne bedeuten: Das hat nicht geklappt. Was auf dem Display steht,
+                erklärt <a href="#probleme">Wenn etwas nicht klappt</a>.</div>
+        </section>
+
+        <section id="automat">
+            <h2>Am Automaten</h2>
+            <p class="who">Für alle: so holst du dir eine Süßigkeit.</p>
+            <ol class="steps">
+                <li>Halte deine Karte an den Leser am Automaten. Oben erscheinen dein Name und deine
+                    Stunden, zum Beispiel <span class="ui">Anna Beispiel:12.5h</span>.</li>
+                <li>Tippe auf die Süßigkeit. Die Zahl neben dem Bild ist der Preis in Stunden.</li>
+                <li>Die Süßigkeit fällt ins Ausgabefach, die Stunden werden abgezogen.</li>
+            </ol>
+            <p>Tippst du eine Weile nichts an, meldet dich der Automat von selbst ab - dann einfach die
+                Karte noch einmal hinhalten. Lehrkräfte und Admins haben unbegrenzt Stunden; bei ihnen
+                steht <span class="ui">∞</span> statt einer Zahl.</p>
+            <p>Ist ein Fach ausgegraut, ist es leer oder gesperrt. Dann bitte einer Lehrkraft Bescheid sagen.</p>
+        </section>
+
+        <section id="stunden">
+            <h2>Wie Stunden entstehen</h2>
+            <p class="who">Für alle.</p>
+            <p>Die Zeit zwischen Einbuchen und Ausbuchen an der Station wird deinem Zeitkonto
+                gutgeschrieben: Eine Stunde im MINT-Zentrum ist eine Stunde auf dem Konto.</p>
+            <div class="note warn">Vergiss das Ausbuchen nicht. Wer länger als 14 Stunden nicht
+                ausgebucht hat, bekommt für diesen Besuch keine Stunden - und beim nächsten Scannen
+                bucht die Station zuerst aus. Dann einfach noch einmal scannen.</div>
+            <p>Lehrkräfte können das Zeitkonto auf der Website von Hand anpassen, zum Beispiel für
+                einen Ausflug.</p>
+        </section>
+
+        <section id="website">
+            <h2>Die Website</h2>
+            <p class="who">Für Lehrkräfte und Admins.</p>
+            <p>Melde dich auf der Startseite mit deiner E-Mail-Adresse und deinem Passwort an. Abmelden
+                kannst du dich oben rechts mit einem Klick auf deinen Namen. Das Passwort vergessen?
+                Ein Admin vergibt unter <span class="ui">Lehrkräfte</span> ein neues.</p>
+            <p>Gibt es noch gar keinen Zugang, zeigt die Startseite stattdessen
+                <span class="ui">Ersten Admin-Zugang anlegen</span>. Wer sich dort als Erstes einträgt,
+                wird Admin.</p>
+
+            <h3>Die Schülerliste</h3>
+            <p><span class="ui">liste</span> in der Seitenleiste zeigt alle Schüler*innen deiner Kurse mit letzter
+                Anwesenheit, Zeitkonto und den letzten sieben Kursterminen als farbige Kästchen:</p>
+            <ul class="legend">
+                <li><span class="sq present"></span>anwesend</li>
+                <li><span class="sq excused"></span>entschuldigt</li>
+                <li><span class="sq absent"></span>abwesend - ein vergangener Termin ohne Eintrag</li>
+                <li><span class="sq none"></span>noch offen - der Termin ist heute oder hat noch keinen Eintrag</li>
+            </ul>
+            <p>Unter <span class="ui">Kursübersicht</span> stehen deine Kurse. Ein Klick auf einen Kurs zeigt
+                nur dessen Teilnehmende und oben, wann und von wem er gehalten wird. Die Seitenleiste
+                lässt sich mit <kbd>☰</kbd> einklappen.</p>
+
+            <h3>Was Kursleitungen dürfen</h3>
+            <p>Wer als Lehrkraft einen Kurs leitet, darf bei dessen Teilnehmenden Anwesenheit und
+                Zeitkonto ändern. Name, Adresse, Kurse und Chipkarte ändern nur Admins.</p>
+        </section>
+
+        <section id="anwesenheit">
+            <h2>Anwesenheit eintragen</h2>
+            <p class="who">Für Lehrkräfte.</p>
+            <p>Wer an der Station ein- und ausbucht, steht automatisch als anwesend da. Von Hand
+                trägst du zum Beispiel Entschuldigungen ein:</p>
+            <ol class="steps">
+                <li>In der Liste bei der Person auf <span class="ui">editieren</span> klicken.</li>
+                <li>Unter <span class="ui">Anwesenheit</span> den Tag wählen - der Kalender markiert Tage
+                    mit Eintrag in den Farben von oben. Das Datum lässt sich auch tippen.</li>
+                <li>Daneben den Status wählen: <span class="ui">Anwesend</span>,
+                    <span class="ui">Entschuldigt</span>, <span class="ui">Abwesend</span> oder
+                    <span class="ui">Kein Eintrag</span>.</li>
+                <li><span class="ui">Speichern</span>.</li>
+            </ol>
+            <p>Ein Tag lässt sich beliebig oft umstellen. Kommt jemand doch, der entschuldigt war, und
+                bucht an der Station ein, wird der Tag von selbst grün.</p>
+            <p>Im selben Fenster passt du unter <span class="ui">Zeitkonto</span> die Stunden an.</p>
+        </section>
+
+        <section id="nutzer">
+            <h2>Nutzer anlegen</h2>
+            <p class="who">Für Admins.</p>
+
+            <h3>Einzeln, mit Chipkarte</h3>
+            <ol class="steps">
+                <li><span class="ui">Nutzer Hinzufügen</span> öffnen, Typ wählen und die Daten eintragen.</li>
+                <li><span class="ui">Chipkarte am Automaten zuweisen</span> angehakt lassen und auf
+                    <span class="ui">Hinzufügen</span> klicken. Die Person ist jetzt vorgemerkt.</li>
+                <li>Am Automaten die Einstellungen öffnen (siehe <a href="#automat-admin">Am Automaten
+                    verwalten</a>) und <span class="ui">Nutzer Hinzufügen</span> tippen. Dort steht ihr Name.
+                    Die neue Karte an den Leser halten.</li>
+                <li>Der Automat zeigt fünf Sekunden lang <span class="ui">Angelegt!</span>, dann die
+                    nächste vorgemerkte Person.</li>
+            </ol>
+            <p>Ohne Häkchen wird die Person nach einer Rückfrage sofort ohne Karte angelegt. Die Karte
+                lässt sich später nachtragen: beim Schüler <span class="ui">editieren</span> →
+                <span class="ui">Chipkarte</span> → <span class="ui">Karte scannen</span> und die Karte
+                innerhalb von 20 Sekunden an den Leser am Automaten halten. Bei Lehrkräften geht das
+                genauso unter <span class="ui">Lehrkräfte</span>.</p>
+
+            <h3>Viele auf einmal: Schülerliste importieren</h3>
+            <ol class="steps">
+                <li><span class="ui">Schüler importieren</span> öffnen und die Vorlage herunterladen.</li>
+                <li>Die Vorlage in einer Tabellenkalkulation ausfüllen, als CSV speichern und wählen.</li>
+                <li>Die Vorschau prüft jede Zeile. Fehlerhafte Zeilen (etwa ein unbekannter Kurs oder eine
+                    Person, die es schon gibt) werden übersprungen.</li>
+                <li>Mit Chipkarten werden alle vorgemerkt und am Automaten in der Reihenfolge der Datei
+                    angelegt, wie oben beschrieben.</li>
+            </ol>
+            <p>Pflicht sind Vorname, Nachname und Geschlecht (<kbd>m</kbd>, <kbd>w</kbd> oder <kbd>d</kbd>
+                genügen). Mehrere Kurse trennst du mit <kbd>|</kbd>.</p>
+        </section>
+
+        <section id="kurse">
+            <h2>Kurse und Lehrkräfte</h2>
+            <p class="who">Für Admins.</p>
+            <p><span class="ui">Kurs Hinzufügen</span> legt einen Kurs mit Name, Wochentag und Lehrkraft an.
+                Unter <span class="ui">Kursübersicht</span> → <span class="ui">Alle Kurse</span> änderst du
+                mit <span class="ui">editieren</span> Tag, Lehrkräfte und Teilnehmende.</p>
+            <p><span class="ui">Lehrkräfte</span> listet alle Zugänge. Dort vergibst du die Stufe
+                (<span class="ui">NORMAL</span> oder <span class="ui">ADMIN</span>), ein neues Passwort und
+                die Chipkarte.</p>
+            <p>Mit <span class="ui">Ansicht als …</span> oben rechts siehst du die Website so, wie eine
+                bestimmte Lehrkraft sie sieht. <span class="ui">Beenden</span> holt dich zurück.</p>
+        </section>
+
+        <section id="export">
+            <h2>Daten exportieren</h2>
+            <p class="who">Für Admins.</p>
+            <p><span class="ui">Daten exportieren</span> lädt eine CSV-Datei mit allen Tagen im gewählten
+                Zeitraum herunter - eine Zeile pro Person, eine Spalte pro Tag mit
+                <span class="ui">Ja</span>, <span class="ui">Entschuldigt</span> oder
+                <span class="ui">Nein</span>. Ohne Datum gilt der ganze Zeitraum, mit einem Kurs nur dessen
+                Teilnehmende.</p>
+        </section>
+
+        <section id="automat-admin">
+            <h2>Am Automaten verwalten</h2>
+            <p class="who">Für Admins. Die Codes dafür gibt es bei der Leitung des MINT-Zentrums.</p>
+            <p>Unten rechts auf das Bambi tippen und einen Code eingeben. Ein Admin-Code öffnet den
+                Admin-Bildschirm oder die Einstellungen. Jeder andere Code zeigt die Statistik: wie oft
+                welche Süßigkeit ausgegeben wurde und wer gerade da ist.</p>
+
+            <h3>Auffüllen und Fächer freigeben</h3>
+            <p>Der Admin-Bildschirm zeigt pro Fach den Vorrat. Der Knopf oben links wechselt zwischen
+                drei Modi, der Regler darunter wählt die Menge:</p>
+            <table>
+                <tr><th>Modus</th><th>Tippen auf ein Fach …</th></tr>
+                <tr><td><kbd>+</kbd></td><td>erhöht den Vorrat um die Menge am Regler.</td></tr>
+                <tr><td><kbd>-</kbd></td><td>verringert den Vorrat.</td></tr>
+                <tr><td><kbd>Reaktivieren</kbd></td><td>gibt ein gesperrtes Fach wieder frei, der Vorrat bleibt.</td></tr>
+            </table>
+            <p>Bleibt eine Süßigkeit hängen, sperrt der Automat das Fach von selbst
+                (<span class="ui">Deaktiviert</span>). Erst das Fach freiräumen, dann reaktivieren.
+                Ausgegraut - also für alle gesperrt - werden leere und gesperrte Fächer nur, wenn in den
+                Einstellungen <span class="ui">Verfügbarkeit überprüfen</span> eingeschaltet ist.</p>
+            <p><span class="ui">Alarm</span> schaltet den Summer am Kartenleser ein und aus.</p>
+
+            <h3>Einstellungen</h3>
+            <table>
+                <tr><td>Auto Logout Zeit</td><td>Nach wie vielen Sekunden der Automat abmeldet. Mit
+                    <kbd>OK</kbd> übernehmen.</td></tr>
+                <tr><td>Verfügbarkeit überprüfen</td><td>Leere Fächer ausgrauen.</td></tr>
+                <tr><td>Stundenanzahl überprüfen</td><td>Ausgeschaltet bekommt jede*r Süßigkeiten, egal
+                    wie viele Stunden.</td></tr>
+                <tr><td>Bildschirmschoner</td><td>Nach 10 Minuten ohne Berührung; Tippen weckt den Automaten.</td></tr>
+                <tr><td>Nutzer Hinzufügen</td><td>Vorgemerkte Personen ihre Karte scannen lassen (siehe
+                    <a href="#nutzer">Nutzer anlegen</a>).</td></tr>
+                <tr><td>PING</td><td>Prüft, ob Kartenleser, Ausgabe und Station erreichbar sind.</td></tr>
+                <tr><td>Statistik Zurücksetzen</td><td>Löscht die gesamte Statistik.</td></tr>
+                <tr><td>Stop</td><td>Beendet die Automaten-App. Wieder starten: im Menü des Geräts
+                    <span class="ui">Automat</span> wählen oder das Gerät neu starten.</td></tr>
+                <tr><td>Herunterfahren</td><td>Schaltet das Gerät nach einer Minute aus; nochmal tippen bricht ab.</td></tr>
+            </table>
+        </section>
+
+        <section id="technik">
+            <h2>Technik</h2>
+            <p class="who">Für Admins, die den Automaten betreuen.</p>
+
+            <h3>Nach jedem Neustart: Datenbank-Passwort</h3>
+            <p>Die Daten sind verschlüsselt. Nach jedem Start fragt der Automat nach dem
+                Datenbank-Passwort und braucht danach einige Sekunden. Bis dahin funktionieren auch die
+                Website und die Station nicht. Ohne das Passwort sind die Daten verloren - es gehört an
+                einen sicheren Ort.</p>
+
+            <h3>Aktualisieren</h3>
+            <p>Auf dem Desktop des Automaten liegt <span class="ui">Automat aktualisieren</span>. Ein
+                Doppelklick holt die neueste Version von Automat und Website und startet beide neu; danach
+                das Datenbank-Passwort eingeben. Daten und Einstellungen bleiben erhalten.</p>
+
+            <h3>Die Geräte</h3>
+            <table>
+                <tr><td>Kartenleser</td><td>am Automaten; meldet Karten an die Website, piept beim Lesen und beim Alarm.</td></tr>
+                <tr><td>Ausgabe</td><td>dreht das gewählte Fach und meldet, wenn nichts herausgefallen ist.</td></tr>
+                <tr><td>Station</td><td>Kartenleser mit Display zum Ein- und Ausbuchen.</td></tr>
+            </table>
+            <p>Alle drei melden sich nach dem Einschalten selbst im WLAN an und finden den Automaten,
+                sobald er läuft.</p>
+        </section>
+
+        <section id="probleme">
+            <h2>Wenn etwas nicht klappt</h2>
+
+            <details>
+                <summary>Die Station zeigt „Karte unbekannt“</summary>
+                <div><p>Die Karte gehört noch niemandem. Ein Admin weist sie zu (siehe
+                    <a href="#nutzer">Nutzer anlegen</a>).</p></div>
+            </details>
+            <details>
+                <summary>Die Station zeigt „Keine Verbindung zum Automaten“</summary>
+                <div><p>Der Automat läuft nicht oder wartet nach einem Neustart noch auf das
+                    Datenbank-Passwort. Sobald er läuft, funktioniert die Station wieder.</p></div>
+            </details>
+            <details>
+                <summary>Die Station sagt „Auf Wiedersehen“, obwohl ich gerade komme</summary>
+                <div><p>Beim letzten Mal wurde nicht ausgebucht. Die Karte einfach noch einmal hinhalten,
+                    dann bist du eingebucht.</p></div>
+            </details>
+            <details>
+                <summary>Der Automat zeigt „Nicht genug Stunden“</summary>
+                <div><p>Dein Zeitkonto reicht für diese Süßigkeit nicht. Wie du Stunden sammelst, steht
+                    unter <a href="#stunden">Wie Stunden entstehen</a>.</p></div>
+            </details>
+            <details>
+                <summary>Der Automat zeigt „Unbekannte Karte“</summary>
+                <div><p>Die Karte ist keiner Person zugeordnet - wie bei der Station oben.</p></div>
+            </details>
+            <details>
+                <summary>Ein Fach ist ausgegraut oder „Deaktiviert“</summary>
+                <div><p>Es ist leer, oder eine Süßigkeit ist hängen geblieben. Ein Admin füllt auf oder
+                    räumt das Fach frei und reaktiviert es (siehe
+                    <a href="#automat-admin">Am Automaten verwalten</a>).</p></div>
+            </details>
+            <details>
+                <summary>Der Automat zeigt „Verbindung wiederherstellen“</summary>
+                <div><p>Er erreicht die Website, den Kartenleser, die Ausgabe oder die Station nicht. Prüfen,
+                    ob alle Geräte Strom haben, dann auf <span class="ui">Verbindung wiederherstellen</span>
+                    tippen. <span class="ui">Lokale Endpunkte verwenden</span> ist nur für Tests gedacht.</p></div>
+            </details>
+            <details>
+                <summary>Die Anmeldung auf der Website klappt nicht</summary>
+                <div>
+                    <p><span class="ui">E-Mail-Adresse oder Passwort falsch</span>: Eingaben prüfen oder einen
+                        Admin um ein neues Passwort bitten.</p>
+                    <p><span class="ui">Anmelden gerade nicht möglich</span>: Der Automat läuft nicht oder
+                        wartet auf das Datenbank-Passwort.</p>
+                </div>
+            </details>
+            <details>
+                <summary>„Karte scannen“ auf der Website findet keine Karte</summary>
+                <div><p>Die Karte muss innerhalb von 20 Sekunden an den Leser <em>am Automaten</em> - nicht an
+                    die Station.</p></div>
+            </details>
+        </section>
+    </main>
+</div>
+
+<script>
+    // Auf schmalen Bildschirmen startet das Inhaltsverzeichnis zugeklappt.
+    if (window.matchMedia("(max-width: 820px)").matches) {
+        document.getElementById("toc-box").removeAttribute("open");
+    }
+</script>
+<footer>&copy; Annika Reinhardt, David Glänzel &amp; Ben Schnorrenberger</footer>
+</body>
+</html>

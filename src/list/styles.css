@@ -437,6 +437,19 @@
 	background-color: #d5d5d5;
 }
 
+/* Typ ändern (Schüler*in -> Lehrkraft/Admin) */
+.type-hint {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.45;
+	color: #555;
+}
+
+#type-msg {
+	font-size: 13px;
+	color: #c0392b;
+}
+
 /* Status-Auswahl im Bearbeiten-Fenster, gleiche Farben wie die Kästchen. */
 #attendance {
 	border-left-width: 6px;

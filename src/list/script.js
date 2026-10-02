@@ -131,7 +131,6 @@ function buildKursSelect(allCourses, selectedIds) {
 async function save(id) {
 	firstName = document.getElementById("firstName").value;
 	lastName = document.getElementById("lastName").value;
-	name = firstName + " " + lastName;
 	balance = document.getElementById("balance").value;
 
     attendanceDate = document.getElementById("attendanceDate").value;
@@ -160,7 +159,8 @@ async function save(id) {
 
 	const payload = {
 		"id": id,
-		"name": name,
+		"firstName": firstName,
+		"lastName": lastName,
 		"hours": parseFloat(balance),
 		"courses": courses,
 		"gender": gender,
@@ -317,6 +317,44 @@ async function popup(id) {
     } else {
         document.querySelectorAll(".admin-field").forEach(el => el.style.display = "none");
     }
+    resetTypeChange(student.id);
+}
+
+// ---------- Typ ändern: Schüler*in -> Lehrkraft/Admin ----------
+
+function resetTypeChange(studentId) {
+    const select = document.getElementById("userType");
+    select.value = "STUDENT";
+    document.getElementById("typeMail").value = "";
+    document.getElementById("typePassword").value = "";
+    document.getElementById("type-msg").textContent = "";
+    document.getElementById("type-login").classList.add("hidden");
+    select.onchange = () => {
+        document.getElementById("type-login").classList.toggle("hidden", select.value === "STUDENT");
+    };
+    document.getElementById("changeTypeBtn").onclick = () => changeType(studentId);
+}
+
+async function changeType(studentId) {
+    const type = document.getElementById("userType").value;
+    const email = document.getElementById("typeMail").value.trim();
+    const password = document.getElementById("typePassword").value;
+    const msg = document.getElementById("type-msg");
+    if (!email.includes("@")) { msg.textContent = "Bitte eine E-Mail-Adresse eingeben."; return; }
+    if (password.length < 8) { msg.textContent = "Das Passwort braucht mindestens 8 Zeichen."; return; }
+    const label = type === "ADMIN" ? "Admin" : "Lehrkraft";
+    if (!confirm(`Diese Person wird zur ${label} und meldet sich künftig mit ${email} an.\nAus ihren Kursen wird sie ausgetragen.`)) return;
+
+    msg.textContent = "";
+    const text = await fetch("/change_user_type", {
+        method: "POST",
+        body: JSON.stringify({ id: studentId, type, email, password }),
+        headers: { "content-type": "application/json; charset=UTF-8" },
+    }).then(r => r.text()).catch(() => "Die Website ist nicht erreichbar.");
+    if (text !== "success") { msg.textContent = text; return; }
+    // Jetzt eine Lehrkraft: steht nicht mehr in dieser Liste, sondern unter "Lehrkräfte".
+    closePopup();
+    location.reload();
 }
 
 function load() {

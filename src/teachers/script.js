@@ -126,6 +126,30 @@ async function saveTeacher(id) {
 		newPassword: document.getElementById("newPassword").value,
 	};
 
+	const message = document.getElementById("message");
+	const newType = document.getElementById("level").value;
+	if (newType === "STUDENT") {
+		// Wird zur Schüler*in: nur der Typ wechselt, die übrigen Felder gelten für Lehrkräfte.
+		if (!confirm("Diese Person wird zur Schüler*in.\nSie verliert ihren Zugang zur Website und wird aus den Kursen ausgetragen, die sie leitet. Stunden, Anwesenheiten und Chipkarte bleiben.")) return;
+		const result = await send("/change_user_type", { id: parseInt(id), type: "STUDENT" });
+		if (result === "success") {
+			message.textContent = "Ist jetzt Schüler*in.";
+			setTimeout(() => { closePopup(); load(); }, 900);
+		} else {
+			message.textContent = result;
+		}
+		return;
+	}
+	if (teacher && newType !== teacher.level) {
+		// Lehrkraft <-> Admin über die geprüfte Umstellung (verhindert z.B., dass
+		// der letzte Admin herabgestuft wird).
+		const typeResult = await send("/change_user_type", { id: parseInt(id), type: newType === "ADMIN" ? "ADMIN" : "TEACHER" });
+		if (typeResult !== "success") {
+			message.textContent = typeResult;
+			return;
+		}
+	}
+
 	const result = await send("/change_teacher", payload);
 	if (result === "success") {
 		document.getElementById("message").textContent = "Gespeichert!";
@@ -166,7 +190,8 @@ async function load() {
 		const tr = document.createElement("tr");
 		tr.id = `teacher-${teacher.id}`;
 
-		[teacher.firstName, teacher.lastName, teacher.mail || "", teacher.level || ""].forEach(text => {
+		const typeLabel = { ADMIN: "Admin", NORMAL: "Lehrkraft" }[teacher.level] || teacher.level || "";
+	[teacher.firstName, teacher.lastName, teacher.mail || "", typeLabel].forEach(text => {
 			const td = document.createElement("td");
 			td.textContent = text;
 			tr.appendChild(td);

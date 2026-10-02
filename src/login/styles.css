@@ -230,3 +230,12 @@ footer {
 	outline: 2px solid #476920;
 	outline-offset: 1px;
 }
+
+/* Link zur öffentlichen Anleitung */
+#login .guide-link {
+	display: block;
+	margin-top: 12px;
+	color: #476920;
+	font-size: 15px;
+	text-align: center;
+}

@@ -147,6 +147,12 @@ def index():
             return file.read();
 
 
+@app.route("/anleitung")
+def anleitung():
+    # Öffentlich: die Anleitung soll auch ohne Anmeldung lesbar sein.
+    return send_file("anleitung/index.html")
+
+
 @app.route("/script.js")
 def script():
     if checkAuth(flask.request.cookies.get("auth")):
@@ -627,6 +633,38 @@ def add_teacher():
     return "success";
 
 
+@app.route("/change_user_type", methods=["POST"])
+def change_user_type():
+    """Typ eines Zugangs ändern: STUDENT, TEACHER oder ADMIN (nur Admins).
+    Die eigentliche Umstellung und ihre Prüfungen (letzter Admin, doppelte
+    E-Mail) macht der Automat; hier nur Rechte und eigener Zugang."""
+    token = flask.request.cookies.get("auth")
+    if not checkAuth(token) or not logedin[token]["admin"]:
+        return flask.make_response("Keine Berechtigung.", 401)
+    data = flask.request.get_json(silent=True) or {}
+    try:
+        user_id = int(data.get("id"))
+    except (TypeError, ValueError):
+        return flask.make_response("Unbekannte Person.", 400)
+    if user_id == logedin[token]["id"]:
+        # Sonst sperrt man sich womöglich selbst aus der Verwaltung aus.
+        return flask.make_response("Den eigenen Zugang kannst du hier nicht ändern.", 400)
+    body = {
+        "id": user_id,
+        "type": str(data.get("type", "")),
+        "email": str(data.get("email", "")).strip(),
+        "password": str(data.get("password", "")),
+    }
+    try:
+        r = hmac_client.post(IP + "/user/changeType", json_body=body)
+    except Exception as e:
+        print(f"[API ERROR] changeType → {type(e).__name__}: {e}")
+        return flask.make_response("Der Automat ist nicht erreichbar.", 503)
+    if r.status_code == 200:
+        return "success"
+    return flask.make_response(r.text, r.status_code)
+
+
 @app.route("/change_teacher", methods=["POST"])
 def change_teacher():
     if not checkAuth(flask.request.cookies.get("auth")):
@@ -710,13 +748,13 @@ def change_user():
         return "fail"
 
     if is_admin:
-        if changes.get("name"):
-            parts = changes["name"].split(" ", 1)
-            patch = {
-                "id": student_id,
-                "firstName": parts[0],
-                "lastName": parts[1] if len(parts) > 1 else "",
-            }
+        # Vor- und Nachname kommen getrennt: Früher wurde "Vorname Nachname"
+        # am ersten Leerzeichen geteilt - bei zwei Vornamen landete der zweite
+        # im Nachnamen ("Anna Maria" + "Schmidt" -> "Anna" + "Maria Schmidt").
+        first_name = str(changes.get("firstName") or "").strip()
+        last_name = str(changes.get("lastName") or "").strip()
+        if first_name and last_name:
+            patch = {"id": student_id, "firstName": first_name, "lastName": last_name}
             _call("post", IP + "/student/modify", json_body=patch)
 
         if changes.get("courses") is not None:

@@ -61,6 +61,33 @@
                         <p class="lable">Geburtstag: </p>
                         <input id="birthday" type="date">
                     </div>
+                    <div class="row admin-field" style="display:none">
+                        <p class="lable">Typ: </p>
+                        <select id="userType">
+                            <option value="STUDENT">Schüler*in</option>
+                            <option value="TEACHER">Lehrkraft</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                    </div>
+                    <div id="type-login" class="hidden">
+                        <p class="type-hint">Lehrkräfte melden sich auf der Website an und brauchen dafür einen Zugang.
+                            Aus Kursen, an denen die Person teilnimmt, wird sie ausgetragen; Stunden,
+                            Anwesenheiten und Chipkarte bleiben.</p>
+                        <div class="row">
+                            <div class="field-pair">
+                                <p class="lable">E-Mail: </p>
+                                <input id="typeMail" type="email" autocomplete="off">
+                            </div>
+                            <div class="field-pair">
+                                <p class="lable">Passwort: </p>
+                                <input id="typePassword" type="password" autocomplete="new-password" placeholder="mind. 8 Zeichen">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button type="button" id="changeTypeBtn">Typ ändern</button>
+                            <span id="type-msg" role="alert"></span>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="modal-section" id="sec-anwesenheit">
