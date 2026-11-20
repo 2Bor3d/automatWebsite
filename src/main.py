@@ -523,18 +523,11 @@ def add_student():
         return "fail"
 
     data = flask.request.get_json();
-    rfid_field = data.pop("rfid", None)
+    data.pop("rfid", None)
 
-    if rfid_field == "false":
-        # Ohne Chipkarte sofort anlegen. Bewusst NICHT über die Warteschlange:
-        # /seed/flush nimmt immer den ältesten Eintrag und würde damit einem
-        # anderen, auf seine Karte wartenden Schüler die Anmeldung wegnehmen.
-        r = _call("post", IP + "/student/addWithoutCard", json_body=data);
-        return "success" if r is not None else "unknown error";
-
-    # Mit Chipkarte: nur vormerken. /student/addStudent legt noch nichts an,
-    # sondern hängt den Schüler in die Warteschlange des Backends. Angelegt wird
-    # er erst, wenn am Automaten ("Nutzer hinzufügen") seine Karte gescannt wird.
+    # Jede neue Schüler*in wird nur vorgemerkt: /student/addStudent hängt sie in
+    # die Warteschlange des Backends. Angelegt wird sie erst, wenn am Automaten
+    # ("Nutzer hinzufügen") ihre Karte gescannt wird.
     r = _call("post", IP + "/student/addStudent", json_body=data);
     if r is None:
         return "unknown error";
@@ -560,9 +553,9 @@ def import_template():
 
 @app.route("/import_students", methods=["POST"])
 def import_students():
-    """Legt die geprüften Zeilen des CSV-Imports an. Mit Karte werden alle der
-    Reihe nach vorgemerkt (Automat, "Nutzer hinzufügen"), ohne Karte sofort
-    angelegt. Antwortet mit einem Ergebnis pro Zeile, in derselben Reihenfolge."""
+    """Merkt die geprüften Zeilen des CSV-Imports der Reihe nach vor; angelegt
+    werden sie am Automaten ("Nutzer hinzufügen"), sobald ihre Karte gescannt
+    wird. Antwortet mit einem Ergebnis pro Zeile, in derselben Reihenfolge."""
     if not checkAuth(flask.request.cookies.get("auth")):
         return flask.make_response("authorisation failed"), 401
     if not logedin[flask.request.cookies.get("auth")]["admin"]:
@@ -572,8 +565,7 @@ def import_students():
     rows = body.get("rows")
     if not isinstance(rows, list):
         return flask.make_response("rows fehlt"), 400
-    with_card = bool(body.get("withCard"))
-    endpoint = "/student/addStudent" if with_card else "/student/addWithoutCard"
+    endpoint = "/student/addStudent"
 
     results = []
     for row in rows:
@@ -607,7 +599,7 @@ def import_students():
         if r is None:
             results.append({"status": "error", "message": "vom Backend abgelehnt"})
         else:
-            results.append({"status": "queued" if with_card else "created"})
+            results.append({"status": "queued"})
     return {"results": results}
 
 
@@ -620,18 +612,21 @@ def add_teacher():
         return "fail"
 
     data = flask.request.get_json();
-    rfid_field = data.pop("rfid", None)
+    data.pop("rfid", None)
 
-    # Lehrkräfte laufen nicht über die Warteschlange, sie werden sofort
-    # angelegt. Eine Karte wird - falls gewünscht - hinterher über
-    # "Lehrkräfte -> bearbeiten -> Karte scannen" zugewiesen; hier blockierend
-    # auf einen Scan zu warten würde nur den Automaten-Scan wegschnappen.
-    scanned_rfid = rfid_field if isinstance(rfid_field, list) else []
-
-    data["rfid"] = scanned_rfid;
-    r = _call("post", IP + "/teacher/addTeacher", json_body=data);
-    if r is None: return "fail"
-    return "success";
+    # Lehrkräfte werden wie Schüler*innen nur vorgemerkt und erst angelegt, wenn
+    # am Automaten ("Nutzer hinzufügen") ihre Karte gescannt wird.
+    try:
+        r = hmac_client.post(IP + "/teacher/addTeacher", json_body=data, timeout=10)
+    except Exception as e:
+        print(f"[API ERROR] POST /teacher/addTeacher → {type(e).__name__}: {e}")
+        return "Automat nicht erreichbar"
+    if r.status_code == 409:
+        return r.text  # E-Mail-Adresse schon vergeben
+    if r.status_code != 200:
+        print(f"[API ERROR] POST /teacher/addTeacher → HTTP {r.status_code}: {r.text[:200]}")
+        return "fail"
+    return "queued";
 
 
 @app.route("/change_user_type", methods=["POST"])

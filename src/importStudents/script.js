@@ -36,7 +36,6 @@ function normalize(text) {
 async function load() {
 	document.getElementById("file").addEventListener("change", onFile);
 	document.getElementById("import").addEventListener("click", runImport);
-	document.getElementById("with-card").addEventListener("change", updateActions);
 
 	const [coursesRes, gendersRes, namesRes] = await Promise.all([
 		fetch("/courses", { method: "POST" }),
@@ -297,8 +296,6 @@ function updateActions() {
 	summary.textContent = `${rows.length} Zeilen gelesen, ${ready} bereit`
 		+ (skipped ? `, ${skipped} werden übersprungen (siehe Status).` : ".");
 
-	const withCard = document.getElementById("with-card").checked;
-	document.getElementById("card-hint").classList.toggle("hidden", !withCard);
 	document.getElementById("actions").classList.toggle("hidden", ready === 0);
 	document.getElementById("import").textContent = ready === 1
 		? "1 Person importieren"
@@ -315,40 +312,9 @@ function showError(text) {
 
 // ---------- Import ----------
 
-function confirmNoCard() {
-	return new Promise((resolve) => {
-		const overlay = document.getElementById("confirm-overlay");
-		const ok = document.getElementById("confirm-ok");
-		const cancel = document.getElementById("confirm-cancel");
-
-		function close(answer) {
-			overlay.classList.add("hidden");
-			ok.removeEventListener("click", onOk);
-			cancel.removeEventListener("click", onCancel);
-			overlay.removeEventListener("click", onBackdrop);
-			document.removeEventListener("keydown", onKey);
-			resolve(answer);
-		}
-		function onOk() { close(true); }
-		function onCancel() { close(false); }
-		function onBackdrop(e) { if (e.target === overlay) close(false); }
-		function onKey(e) { if (e.key === "Escape") close(false); }
-
-		ok.addEventListener("click", onOk);
-		cancel.addEventListener("click", onCancel);
-		overlay.addEventListener("click", onBackdrop);
-		document.addEventListener("keydown", onKey);
-
-		overlay.classList.remove("hidden");
-		cancel.focus();
-	});
-}
-
 async function runImport() {
-	const withCard = document.getElementById("with-card").checked;
 	const todo = importable();
 	if (!todo.length) return;
-	if (!withCard && !(await confirmNoCard())) return;
 
 	const button = document.getElementById("import");
 	button.disabled = true;
@@ -360,7 +326,6 @@ async function runImport() {
 			method: "POST",
 			headers: { "content-type": "application/json; charset=UTF-8" },
 			body: JSON.stringify({
-				withCard,
 				rows: todo.map(r => ({
 					firstName: r.firstName,
 					lastName: r.lastName,
@@ -389,10 +354,8 @@ async function runImport() {
 
 	const ok = todo.filter(r => r.result.status !== "error").length;
 	const failed = todo.length - ok;
-	let text = withCard
-		? `${ok} vorgemerkt. Jetzt am Automaten „Nutzer hinzufügen“ öffnen und die Karten in der Reihenfolge der Liste scannen.`
-		: `${ok} angelegt.`;
-	if (failed) text += ` ${failed} konnten nicht angelegt werden (siehe Status).`;
+	let text = `${ok} vorgemerkt. Jetzt am Automaten „Nutzer hinzufügen“ öffnen und die Karten in der Reihenfolge der Liste scannen.`;
+	if (failed) text += ` ${failed} konnten nicht vorgemerkt werden (siehe Status).`;
 	document.getElementById("message").innerText = text;
 	button.disabled = false;
 	updateActions();

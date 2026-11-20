@@ -45,36 +45,6 @@ function change_type() {
 }
 
 
-// Zeigt die Rückfrage und liefert das Ergebnis als Promise.
-function confirmNoCard() {
-    return new Promise((resolve) => {
-        const overlay = document.getElementById("confirm-overlay");
-        const ok = document.getElementById("confirm-ok");
-        const cancel = document.getElementById("confirm-cancel");
-
-        function close(answer) {
-            overlay.classList.add("hidden");
-            ok.removeEventListener("click", onOk);
-            cancel.removeEventListener("click", onCancel);
-            overlay.removeEventListener("click", onBackdrop);
-            document.removeEventListener("keydown", onKey);
-            resolve(answer);
-        }
-        function onOk() { close(true); }
-        function onCancel() { close(false); }
-        function onBackdrop(e) { if (e.target === overlay) close(false); }
-        function onKey(e) { if (e.key === "Escape") close(false); }
-
-        ok.addEventListener("click", onOk);
-        cancel.addEventListener("click", onCancel);
-        overlay.addEventListener("click", onBackdrop);
-        document.addEventListener("keydown", onKey);
-
-        overlay.classList.remove("hidden");
-        cancel.focus();
-    });
-}
-
 async function submit() {
     const message = document.getElementById("message");
 
@@ -82,8 +52,6 @@ async function submit() {
 
     firstName = document.getElementById("firstName").value.trim();
     lastName = document.getElementById("lastName").value.trim();
-    const wantsCard = document.getElementById("rfid").checked;
-    rfid = "false";
     gender = document.getElementById("gender").value;
     // Leere Zahlenfelder ergeben NaN, das JSON.stringify zu null macht - damit
     // lehnt das Backend den ganzen Datensatz ab. Deshalb auf 0 zurückfallen.
@@ -103,14 +71,11 @@ async function submit() {
         return;
     }
 
-    // Mit Karte wird der Schüler nur vorgemerkt - angelegt wird er erst, wenn
-    // die Karte am Automaten gescannt wird. Ohne Karte wird sofort angelegt,
-    // dann aber mit Rückfrage.
-    rfid = wantsCard ? "true" : "false";
-    if (!wantsCard && !(await confirmNoCard())) {
-        message.innerText = "";
-        return;
-    }
+    // Alle werden nur vorgemerkt - angelegt wird die Person erst, wenn ihre
+    // Karte am Automaten unter „Nutzer hinzufügen“ gescannt wird.
+    const queuedText = `${firstName} ${lastName} ist vorgemerkt. `
+        + "Jetzt am Automaten „Nutzer hinzufügen“ öffnen und die "
+        + "Chipkarte scannen – damit ist die Person angelegt.";
 
     message.innerText = "Verarbeitung…";
 
@@ -123,7 +88,6 @@ async function submit() {
             body: JSON.stringify({
                 "firstName": firstName,
                 "lastName": lastName,
-                "rfid": rfid,
                 "gender": gender,
                 "birthday": birthday,
                 "address": {
@@ -141,13 +105,9 @@ async function submit() {
                 "Content-type": "application/json; charset=UTF-8",
             }
         }).then((response) => response.text()).then((text) => {
-            if (text != "success") {
-                message.innerText = "Konnte nicht angelegt werden: " + text;
-                return;
-            }
-            message.innerText = wantsCard
-                ? "Angelegt. Chipkarte jetzt über „Lehrkräfte → bearbeiten → Karte scannen“ zuweisen."
-                : "Erfolgreich hinzugefügt!";
+            message.innerText = text === "queued"
+                ? queuedText
+                : "Konnte nicht vorgemerkt werden: " + text;
         }).catch((err) => {
             console.error("Anlegen fehlgeschlagen:", err);
             message.innerText = "Konnte nicht angelegt werden.";
@@ -160,7 +120,6 @@ async function submit() {
             body: JSON.stringify({
                 "firstName": firstName,
                 "lastName": lastName,
-                "rfid": rfid,
                 "gender": gender,
                 "birthday": birthday,
                 "address": {
@@ -176,15 +135,9 @@ async function submit() {
                 "Content-type": "application/json; charset=UTF-8",
             }
         }).then((response) => response.text()).then((text) => {
-            if (text === "queued") {
-                message.innerText = `${firstName} ${lastName} ist vorgemerkt. `
-                    + "Jetzt am Automaten „Nutzer hinzufügen“ öffnen und die "
-                    + "Chipkarte scannen - damit ist die Person angelegt.";
-                return;
-            }
-            message.innerText = text === "success"
-                ? "Erfolgreich hinzugefügt!"
-                : "Konnte nicht angelegt werden: " + text;
+            message.innerText = text === "queued"
+                ? queuedText
+                : "Konnte nicht vorgemerkt werden: " + text;
         }).catch((err) => {
             console.error("Anlegen fehlgeschlagen:", err);
             message.innerText = "Konnte nicht angelegt werden.";

@@ -23,10 +23,6 @@
         <label for="lastName" id="lLastName">Lastname: </label>
         <input id="lastName">
 
-        <label for="rfid" id="lRfid">Chipkarte am Automaten zuweisen: </label>
-        <div>
-            <input id="rfid" name="rfid" type="checkbox" checked>
-        </div>
         <p id="rfid-hint">
             Die Person wird vorgemerkt und angelegt, sobald ihre Karte am
             Automaten unter „Nutzer hinzufügen“ gescannt wird.
@@ -69,18 +65,5 @@
     </div>
 </div>
 
-<div id="confirm-overlay" class="hidden">
-    <div id="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-        <h3 id="confirm-title">Ohne Chipkarte anlegen?</h3>
-        <p id="confirm-text">
-            Ohne Chipkarte kann sich diese Person nicht am Automaten anmelden.
-            Die Karte lässt sich später über „Bearbeiten“ nachtragen.
-        </p>
-        <div id="confirm-actions">
-            <button type="button" id="confirm-cancel">Abbrechen</button>
-            <button type="button" id="confirm-ok">Ohne Karte anlegen</button>
-        </div>
-    </div>
-</div>
 </body>
 </html>
