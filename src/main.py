@@ -5,6 +5,8 @@ import hmac_client
 import base64
 import os
 import csv as csvBib
+import io
+import re
 from datetime import datetime, date as Date, timedelta
 from flask import send_file
 import bcrypt
@@ -239,7 +241,9 @@ def start_session(user: dict, courses_file: list):
         "sub": {},
     };
     response = flask.make_response("success", 200);
-    response.set_cookie("auth", random_bytes);
+    # HttpOnly: kein Skript kommt an das Sitzungs-Cookie. SameSite=Lax: fremde
+    # Seiten können keine Formulare mit diesem Cookie abschicken.
+    response.set_cookie("auth", random_bytes, httponly=True, samesite="Lax");
     return response
 
 
@@ -311,10 +315,28 @@ def username():
         return flask.make_response("authorisation failed"), 401
 
 
+def is_page(position) -> bool:
+    """Nur echte Seiten (ein Ordner mit index.html) - die Position landet in
+    einem Dateipfad (page.html), ein "../" darf da nicht hinein."""
+    return isinstance(position, str) and re.fullmatch(r"[A-Za-z]+", position) is not None \
+        and os.path.isfile(os.path.join(position, "index.html"))
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    """Beendet die Sitzung auch hier - sonst blieb ein altes Cookie gültig."""
+    logedin.pop(flask.request.cookies.get("auth"), None)
+    response = flask.make_response("success")
+    response.delete_cookie("auth", httponly=True, samesite="Lax")
+    return response
+
+
 @app.route("/move", methods=["POST"])
 def move():
     if checkAuth(flask.request.cookies.get("auth")):
         body = flask.request.get_json()
+        if not is_page(body.get("position")):
+            return flask.make_response("unknown page"), 400
         logedin[flask.request.cookies.get("auth")]["position"] = body["position"]
         logedin[flask.request.cookies.get("auth")]["sub"] = body.get("sub", {})
         return flask.make_response("success");
@@ -961,10 +983,6 @@ def csv():
     to = flask.request.form.get("to", "")
     course_filter = flask.request.form.get("course", "all")
 
-    file_path = "students.csv"
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
     r = _call("get", IP + "/student/allStudents");
     if r is None: return flask.make_response("backend unavailable", 503)
     students = json.loads(r.text)["students"];
@@ -995,27 +1013,28 @@ def csv():
     # Entschuldigt ist nicht dasselbe wie anwesend - früher stand dort "Ja".
     labels = {"normal": "Ja", "excused": "Entschuldigt", "absent": "Nein"}
 
-    with open('./students.csv', 'w', newline='') as csvfile:
-        writer = csvBib.writer(csvfile, delimiter=';')
-        writer.writerow(['Index', 'Name'] + sorted_days)
-        for row in rows:
-            line = [str(row["id"]), row["name"]] + \
-                   [labels[row["days"].get(d, "absent")] for d in sorted_days]
-            writer.writerow(line)
+    # Im Speicher bauen: früher landete die Liste mit allen Namen als
+    # students.csv im Website-Ordner (und zwei gleichzeitige Exporte schrieben
+    # in dieselbe Datei).
+    buffer = io.StringIO(newline='')
+    writer = csvBib.writer(buffer, delimiter=';')
+    writer.writerow(['Index', 'Name'] + sorted_days)
+    for row in rows:
+        line = [str(row["id"]), row["name"]] + \
+               [labels[row["days"].get(d, "absent")] for d in sorted_days]
+        writer.writerow(line)
 
-    return send_file("students.csv", as_attachment=True)
+    return send_file(io.BytesIO(buffer.getvalue().encode("utf-8")), as_attachment=True,
+                     download_name="students.csv", mimetype="text/csv")
 
 
 @app.route("/scan", methods=["POST"])
 def scan():
     data = flask.request.get_data()
-    print(json.loads(data))
     if scanner["active"]:
         scanner["id"] = json.loads(data);
-        print("something")
     else:
-        r = _call("post", IP + "/scanned", json_body={"rfid": json.loads(data)})
-        print(r)
+        _call("post", IP + "/scanned", json_body={"rfid": json.loads(data)})
     return "idk bro"
 
 
@@ -1024,9 +1043,10 @@ def station_scan():
     data = flask.request.get_data()
     r = _call("post", IP + "/login", json_body={"rfid": json.loads(data)})
     if r is None: return "login failed"
-    print(r.text)
     return r.text
 
 
 if __name__ == "__main__":
-    app.run(port=8080, host="0.0.0.0", debug=True, threaded=True)
+    # Kein debug=True: der Werkzeug-Debugger erlaubt Codeausführung aus dem Netz
+    # und zeigt bei Fehlern den Quelltext. (Der Dienst startet ohnehin ohne.)
+    app.run(port=8080, host="0.0.0.0", debug=False, threaded=True)

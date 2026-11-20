@@ -129,8 +129,9 @@ function stopViewAs() {
 
 function logout() {
 	if (confirm("Wollen Sie sich ausloggen?")) {
-        document.cookie = "auth=;expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-		window.location.reload();
+		// Das Cookie ist HttpOnly - löschen muss es der Server, der dabei auch
+		// die Sitzung beendet.
+		fetch("/logout", { method: "POST" }).finally(() => window.location.reload());
 	}
 }
 
