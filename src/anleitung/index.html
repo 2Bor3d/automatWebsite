@@ -281,6 +281,10 @@ Stunden: 12.5</pre>
             </ol>
             <p>Hältst du die Karte zweimal kurz hintereinander hin, zählt das nur einmal - du wirst
                 nicht aus Versehen gleich wieder ausgebucht.</p>
+            <p>Unten rechts auf dem Display zeigen bis zu vier Balken, wie gut die Station das WLAN
+                empfängt; nur Punkte heißen: kein WLAN. Steht dort <span class="ui">Update im Gange</span>,
+                spielt sich die Station gerade eine neue Version auf - nach einigen Sekunden startet sie neu
+                und ist wieder bereit.</p>
             <div class="note">Drei kurze Pieptöne bedeuten: Das hat nicht geklappt. Was auf dem Display steht,
                 erklärt <a href="#probleme">Wenn etwas nicht klappt</a>.</div>
         </section>
@@ -291,13 +295,17 @@ Stunden: 12.5</pre>
             <ol class="steps">
                 <li>Halte deine Karte an den Leser am Automaten. Oben erscheinen dein Name und deine
                     Stunden, zum Beispiel <span class="ui">Anna Beispiel:12.5h</span>.</li>
-                <li>Tippe auf die Süßigkeit. Die Zahl neben dem Bild ist der Preis in Stunden.</li>
+                <li>Tippe auf die Süßigkeit. Die Zahl neben dem Bild ist der Preis in Stunden - auch halbe
+                    Stunden sind möglich, zum Beispiel <span class="ui">1,5</span>.</li>
                 <li>Die Süßigkeit fällt ins Ausgabefach, die Stunden werden abgezogen.</li>
             </ol>
             <p>Tippst du eine Weile nichts an, meldet dich der Automat von selbst ab - dann einfach die
                 Karte noch einmal hinhalten. Lehrkräfte und Admins haben unbegrenzt Stunden; bei ihnen
                 steht <span class="ui">∞</span> statt einer Zahl.</p>
-            <p>Ist ein Fach ausgegraut, ist es leer oder gesperrt. Dann bitte einer Lehrkraft Bescheid sagen.</p>
+            <p>Ist ein Fach ausgegraut oder steht <span class="ui">Fach leer oder gesperrt</span> da, ist es
+                leer oder gesperrt. Dann bitte einer Lehrkraft Bescheid sagen.</p>
+            <p>Abgezogen wird nur, was die Ausgabe auch angenommen hat: Ist sie gerade nicht erreichbar oder
+                nicht bereit, verlierst du keine Stunden.</p>
         </section>
 
         <section id="stunden">
@@ -477,15 +485,34 @@ Stunden: 12.5</pre>
             <p>Auf dem Desktop des Automaten liegt <span class="ui">Automat aktualisieren</span>. Ein
                 Doppelklick holt die neueste Version von Automat und Website und startet beide neu; danach
                 das Datenbank-Passwort eingeben. Daten und Einstellungen bleiben erhalten.</p>
+            <p>Die Einstellungsdatei <code>config.yaml</code> auf dem Automaten (Preise, Adressen der Geräte)
+                wird dabei bewusst nicht überschrieben. Neue Preise trägt man dort von Hand ein und startet den
+                Automaten neu.</p>
+            <p><strong>Die drei Geräte aktualisieren sich selbst.</strong> Etwa 30 Sekunden nach dem Start
+                und danach alle 15 Minuten fragt der Automat ihre Version ab. Passt sie nicht zu seiner, holt
+                sich das Gerät die neuen Dateien über das WLAN vom Automaten und startet neu. Die Ausgabe
+                wartet damit, bis sie nichts mehr ausgibt; solange der Alarm läuft, wird nichts aktualisiert.</p>
+            <p>Eine neue Version läuft zuerst auf Probe: Meldet sich der Automat danach nicht innerhalb von
+                drei Minuten bei dem Gerät, startet es neu, und nach drei Fehlversuchen kommt von selbst die
+                alte Version zurück. Die Dateien sind mit dem HMAC-Schlüssel signiert - fremder Code wird
+                nicht angenommen.</p>
+            <div class="note">Nur per USB: das allererste Aufspielen, Änderungen an <code>boot.py</code> und
+                die WLAN-Zugangsdaten und Schlüssel in der <code>.env</code> eines Geräts. Wie das geht, steht
+                im Projekt unter <code>esp/README.md</code>.</div>
 
             <h3>Die Geräte</h3>
             <table>
                 <tr><td>Kartenleser</td><td>am Automaten; meldet Karten an die Website, piept beim Lesen und beim Alarm.</td></tr>
-                <tr><td>Ausgabe</td><td>dreht das gewählte Fach und meldet, wenn nichts herausgefallen ist.</td></tr>
-                <tr><td>Station</td><td>Kartenleser mit Display zum Ein- und Ausbuchen.</td></tr>
+                <tr><td>Ausgabe</td><td>dreht das gewählte Fach und meldet jede Ausgabe: geklappt oder nichts
+                    herausgefallen. Spricht eine Lichtschranke an, ohne dass etwas ausgegeben wird, meldet sie
+                    einen Eingriff - dann geht der Alarm an.</td></tr>
+                <tr><td>Station</td><td>Kartenleser mit Display zum Ein- und Ausbuchen; zeigt unten rechts die
+                    WLAN-Stärke.</td></tr>
             </table>
             <p>Alle drei melden sich nach dem Einschalten selbst im WLAN an und finden den Automaten,
-                sobald er läuft.</p>
+                sobald er läuft. Die Ausgabe prüft der Automat alle fünf Sekunden: Ohne sie lässt sich nichts
+                ausgeben, deshalb zeigt er <span class="ui">Verbindung wiederherstellen</span>, sobald sie nicht
+                mehr antwortet.</p>
         </section>
 
         <section id="probleme">
@@ -523,9 +550,27 @@ Stunden: 12.5</pre>
             </details>
             <details>
                 <summary>Der Automat zeigt „Verbindung wiederherstellen“</summary>
-                <div><p>Er erreicht die Website, den Kartenleser, die Ausgabe oder die Station nicht. Prüfen,
-                    ob alle Geräte Strom haben, dann auf <span class="ui">Verbindung wiederherstellen</span>
-                    tippen. <span class="ui">Lokale Endpunkte verwenden</span> ist nur für Tests gedacht.</p></div>
+                <div><p>Er erreicht die Website, den Kartenleser, die Ausgabe oder die Station nicht - bei
+                    der Ausgabe merkt er das innerhalb weniger Sekunden von selbst. Prüfen, ob alle Geräte
+                    Strom haben, dann auf <span class="ui">Verbindung wiederherstellen</span> tippen.
+                    <span class="ui">Lokale Endpunkte verwenden</span> ist nur für Tests gedacht.</p></div>
+            </details>
+            <details>
+                <summary>Der Automat zeigt „Ausgabe nicht bereit“</summary>
+                <div><p>Die Ausgabe hat den Auftrag nicht angenommen, etwa weil sie sich gerade aktualisiert.
+                    Es wurde nichts abgezogen - einen Moment warten und noch einmal tippen.</p></div>
+            </details>
+            <details>
+                <summary>Der Alarm piept</summary>
+                <div><p>Eine Lichtschranke der Ausgabe hat angesprochen, ohne dass etwas ausgegeben wurde -
+                    jemand hat in den Automaten gegriffen. Aus geht der Alarm mit dem Admin-Code oder wenn
+                    Lehrkräfte oder Admins ihre Karte am Automaten oder an der Station scannen. Danach
+                    nachsehen, ob am Ausgabefach alles in Ordnung ist.</p></div>
+            </details>
+            <details>
+                <summary>Die Station zeigt „Update ist fehlgeschlagen“</summary>
+                <div><p>Die neue Version ließ sich nicht laden, die Station läuft mit der alten weiter. Der
+                    Automat versucht es nach spätestens 15 Minuten von selbst noch einmal.</p></div>
             </details>
             <details>
                 <summary>Die Anmeldung auf der Website klappt nicht</summary>
