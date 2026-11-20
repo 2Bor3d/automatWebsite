@@ -68,7 +68,8 @@ def day_statuses(attendances: list) -> dict:
 
 def last_attendance_date(attendances: list) -> str:
     present = [d for d, s in day_statuses(attendances).items() if s == "normal"]
-    return max(present) if present else "None"
+    # Noch nie da gewesen: Strich statt "None" in der Liste.
+    return max(present) if present else "–"
 
 
 def student_balance(entry: dict) -> float:
