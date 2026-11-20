@@ -15,6 +15,8 @@ function login() {
 			window.location.reload();
 		} else if (response.status === 401) {
 			msg.innerText = "E-Mail-Adresse oder Passwort falsch.";
+		} else if (response.status === 429) {
+			msg.innerText = "Zu viele Fehlversuche - bitte in 5 Minuten noch einmal versuchen.";
 		} else {
 			msg.innerText = "Anmelden gerade nicht möglich - läuft der Automat?";
 		}

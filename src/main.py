@@ -7,6 +7,7 @@ import os
 import csv as csvBib
 import io
 import re
+import threading
 from datetime import datetime, date as Date, timedelta
 from flask import send_file
 import bcrypt
@@ -24,10 +25,59 @@ IP = "http://127.0.0.1:8000";
 #IP = "http://192.168.4.1";
 
 
+# Sitzungen enden nach so langer Zeit ohne Anfrage.
+SESSION_IDLE_SECONDS = 12 * 60 * 60
+
+
 def checkAuth(auth: str) -> bool:
-    if auth in logedin:
-        return True;
-    return False;
+    session = logedin.get(auth)
+    if session is None:
+        return False
+    now = time.time()
+    if now - session.get("last_seen", now) > SESSION_IDLE_SECONDS:
+        logedin.pop(auth, None)
+        return False
+    session["last_seen"] = now
+    return True
+
+
+# ---------- Schutz gegen Passwort-Raten ----------
+# Nach LOGIN_MAX_FAILS Fehlversuchen (je E-Mail-Adresse und je Gerät) innerhalb
+# von LOGIN_LOCK_SECONDS ist die Anmeldung für diese Zeit gesperrt.
+LOGIN_MAX_FAILS = 5
+LOGIN_LOCK_SECONDS = 5 * 60
+_login_failures = {}
+_login_lock = threading.Lock()
+# Für unbekannte E-Mail-Adressen: gleich lange rechnen wie bei bekannten, damit
+# die Antwortzeit nicht verrät, welche Adressen es gibt.
+_DUMMY_HASH = bcrypt.hashpw(b"dummy", bcrypt.gensalt(12))
+
+
+def _login_keys(mail: str) -> list:
+    return [("mail", mail.strip().lower()), ("ip", flask.request.remote_addr or "")]
+
+
+def _login_locked(keys: list) -> bool:
+    now = time.time()
+    with _login_lock:
+        for key in keys:
+            recent = [t for t in _login_failures.get(key, []) if now - t < LOGIN_LOCK_SECONDS]
+            _login_failures[key] = recent
+            if len(recent) >= LOGIN_MAX_FAILS:
+                return True
+    return False
+
+
+def _login_failed(keys: list):
+    with _login_lock:
+        for key in keys:
+            _login_failures.setdefault(key, []).append(time.time())
+
+
+def _login_succeeded(keys: list):
+    with _login_lock:
+        for key in keys:
+            _login_failures.pop(key, None)
 
 
 # ---------- helpers for new API ----------
@@ -208,7 +258,12 @@ def pageCss():
 
 @app.route("/login", methods=["POST"])
 def login():
-    attempt = flask.request.get_json();
+    attempt = flask.request.get_json(silent=True) or {}
+    username = str(attempt.get("username", ""))
+    password = str(attempt.get("password", ""))
+    keys = _login_keys(username)
+    if _login_locked(keys):
+        return flask.make_response("too many attempts", 429)
     r = _call("get", IP + "/teacher/allTeachers");
     if r is None: return flask.make_response("backend unavailable", 503)
     users = json.loads(r.text)["teachers"];
@@ -217,13 +272,16 @@ def login():
     if r is None: return flask.make_response("backend unavailable", 503)
     courses_file = json.loads(r.text)["courses"];
 
-    response = flask.make_response("wrong username or password", 401)
-    for user in users:
-        pw_ok = bcrypt.checkpw(attempt["password"].encode(), user["password"].encode())
-        if user["mail"] == attempt["username"] and pw_ok:
-            response = start_session(user, courses_file)
-            break;
-    return response;
+    # Erst die E-Mail-Adresse suchen, dann genau ein bcrypt-Vergleich - früher
+    # lief er für jede Lehrkraft (je ~0,25 s auf dem Pi).
+    user = next((u for u in users if u.get("mail") == username and u.get("password")), None)
+    stored = user["password"].encode() if user else _DUMMY_HASH
+    pw_ok = bcrypt.checkpw(password.encode(), stored)
+    if user is None or not pw_ok:
+        _login_failed(keys)
+        return flask.make_response("wrong username or password", 401)
+    _login_succeeded(keys)
+    return start_session(user, courses_file)
 
 
 def start_session(user: dict, courses_file: list):
@@ -231,8 +289,14 @@ def start_session(user: dict, courses_file: list):
     tutor_id = user["id"]
     courses_user = [c for c in courses_file
                     if any(t["id"] == tutor_id for t in c.get("tutor", []))]
+    # Abgelaufene Sitzungen aufräumen, die niemand mehr benutzt hat.
+    now = time.time()
+    for token in [t for t, sess in list(logedin.items())
+                  if now - sess.get("last_seen", now) > SESSION_IDLE_SECONDS]:
+        logedin.pop(token, None)
     random_bytes = base64.b64encode(os.urandom(32)).decode("utf-8");
     logedin[random_bytes] = {
+        "last_seen": time.time(),
         "id": user["id"],
         "username": user["mail"],
         "admin": user["level"] == "ADMIN",
@@ -851,6 +915,10 @@ def student_attendances():
         return flask.make_response("authorisation failed"), 401
 
     student_id = flask.request.get_json().get("id")
+    user = logedin[flask.request.cookies.get("auth")]
+    # Nur Admins und wer einen Kurs der Person leitet - wie beim Bearbeiten.
+    if not user["admin"] and not is_tutor_of_student(user, student_id):
+        return flask.make_response("authorisation failed"), 403
     return day_statuses(get_attendances(student_id))
 
 

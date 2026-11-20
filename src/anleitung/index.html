@@ -324,7 +324,7 @@ Stunden: 12.5</pre>
             <h2>Die Website</h2>
             <p class="who">Für Lehrkräfte und Admins.</p>
             <p>Melde dich auf der Startseite mit deiner E-Mail-Adresse und deinem Passwort an. Abmelden
-                kannst du dich oben rechts mit einem Klick auf deinen Namen. Das Passwort vergessen?
+                kannst du dich oben rechts mit einem Klick auf deinen Namen. Nach 12 Stunden ohne Aktivität meldet dich die Website von selbst ab. Das Passwort vergessen?
                 Admins vergeben unter <span class="ui">Lehrkräfte</span> ein neues.</p>
             <p>Gibt es noch gar keinen Zugang, zeigt die Startseite stattdessen
                 <span class="ui">Ersten Admin-Zugang anlegen</span>. Wer sich dort als Erstes einträgt,
@@ -485,9 +485,14 @@ Stunden: 12.5</pre>
             <p>Auf dem Desktop des Automaten liegt <span class="ui">Automat aktualisieren</span>. Ein
                 Doppelklick holt die neueste Version von Automat und Website und startet beide neu; danach
                 das Datenbank-Passwort eingeben. Daten und Einstellungen bleiben erhalten.</p>
-            <p>Die Einstellungsdatei <code>config.yaml</code> auf dem Automaten (Preise, Adressen der Geräte)
+            <p>Die Einstellungsdatei <code>config.yaml</code> auf dem Automaten (Preise, Adressen der Geräte,
+                PINs)
                 wird dabei bewusst nicht überschrieben. Neue Preise trägt man dort von Hand ein und startet den
                 Automaten neu.</p>
+            <p>Die beiden Codes am Automaten stehen dort als <code>admin-pin</code> (Admin-Bildschirm) und
+                <code>settings-pin</code> (Einstellungen), jeweils 4 bis 12 Ziffern in Anführungszeichen. Fehlen
+                sie, gelten die alten Standardcodes - die stehen öffentlich im Quelltext und sollten ersetzt
+                werden.</p>
             <p><strong>Die drei Geräte aktualisieren sich selbst.</strong> Etwa 30 Sekunden nach dem Start
                 und danach alle 15 Minuten fragt der Automat ihre Version ab. Passt sie nicht zu seiner, holt
                 sich das Gerät die neuen Dateien über das WLAN vom Automaten und startet neu. Die Ausgabe
@@ -579,6 +584,8 @@ Stunden: 12.5</pre>
                         Admins um ein neues Passwort bitten.</p>
                     <p><span class="ui">Anmelden gerade nicht möglich</span>: Der Automat läuft nicht oder
                         wartet auf das Datenbank-Passwort.</p>
+                    <p><span class="ui">Zu viele Fehlversuche</span>: Nach fünf falschen Versuchen ist die
+                        Anmeldung für diese E-Mail-Adresse und dieses Gerät fünf Minuten gesperrt.</p>
                 </div>
             </details>
             <details>
