@@ -87,3 +87,9 @@ input {
     max-width: 400px;
     height:fit-content;
 }
+
+/* Auswahllisten so breit wie die Textfelder (Aussehen: /static/select.css). */
+select {
+    width: 100%;
+    margin-bottom: 10px;
+}

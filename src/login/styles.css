@@ -200,7 +200,13 @@ footer {
 	border-radius: 4px;
 	box-sizing: border-box;
 	font: inherit;
-	background: #fff;
+	background-color: #fff;
+}
+
+/* Platz für den Pfeil aus /static/select.css - "#setup input, #setup select" oben
+   ist spezifischer und würde das Polster sonst überschreiben. */
+#setup select {
+	padding-right: 34px;
 }
 
 #setup button {

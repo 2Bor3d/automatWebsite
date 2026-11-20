@@ -41,3 +41,9 @@ input {
 #day {
     margin-bottom: 15px;
 }
+
+/* Auswahllisten so breit wie die Textfelder (Aussehen: /static/select.css). */
+select {
+    width: 100%;
+    margin-bottom: 10px;
+}
