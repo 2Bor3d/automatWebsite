@@ -128,7 +128,7 @@ function stopViewAs() {
 }
 
 function logout() {
-	if (confirm("wollen sie sich ausloggen?")) {
+	if (confirm("Wollen Sie sich ausloggen?")) {
         document.cookie = "auth=;expires=Thu, 01 Jan 1970 00:00:00 UTC;";
 		window.location.reload();
 	}

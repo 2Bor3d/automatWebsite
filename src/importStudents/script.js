@@ -354,7 +354,7 @@ async function runImport() {
 
 	const ok = todo.filter(r => r.result.status !== "error").length;
 	const failed = todo.length - ok;
-	let text = `${ok} vorgemerkt. Jetzt am Automaten „Nutzer hinzufügen“ öffnen und die Karten in der Reihenfolge der Liste scannen.`;
+	let text = `${ok} vorgemerkt. Jetzt am Automaten „Person hinzufügen“ öffnen und die Karten in der Reihenfolge der Liste scannen.`;
 	if (failed) text += ` ${failed} konnten nicht vorgemerkt werden (siehe Status).`;
 	document.getElementById("message").innerText = text;
 	button.disabled = false;

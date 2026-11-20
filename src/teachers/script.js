@@ -130,7 +130,7 @@ async function saveTeacher(id) {
 	const newType = document.getElementById("level").value;
 	if (newType === "STUDENT") {
 		// Wird zur Schüler*in: nur der Typ wechselt, die übrigen Felder gelten für Lehrkräfte.
-		if (!confirm("Diese Person wird zur Schüler*in.\nSie verliert ihren Zugang zur Website und wird aus den Kursen ausgetragen, die sie leitet. Stunden, Anwesenheiten und Chipkarte bleiben.")) return;
+		if (!confirm("Diese Person wird Schüler*in.\nSie verliert ihren Zugang zur Website und wird aus den Kursen ausgetragen, die sie leitet. Stunden, Anwesenheiten und Chipkarte bleiben.")) return;
 		const result = await send("/change_user_type", { id: parseInt(id), type: "STUDENT" });
 		if (result === "success") {
 			message.textContent = "Ist jetzt Schüler*in.";

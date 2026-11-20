@@ -51,7 +51,7 @@ function save(id) {
 }
 
 function deleteUser(id) {
-	if (confirm("Wollen Sie diesen Kurs wirklich löschen?\nAlle Daten werden restlos gelöscht")) {
+	if (confirm("Wollen Sie diesen Kurs wirklich löschen?\nAlle Daten werden restlos gelöscht.")) {
 		fetch("/delete_course", {
 			method: "POST",
 			body: JSON.stringify({ id: id }),

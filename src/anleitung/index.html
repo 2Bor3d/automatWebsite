@@ -230,7 +230,7 @@
                 Station bis zur Verwaltung auf der Website.</p>
         </div>
         <figure class="lcd" aria-label="Beispiel: Anzeige der Station beim Kommen">
-            <pre>Herzlich Willkommen,
+            <pre>Herzlich willkommen,
 Anna Beispiel
 im MINT-Zentrum!
 Stunden: 12.5</pre>
@@ -256,7 +256,7 @@ Stunden: 12.5</pre>
         </ol>
         <p>Admins</p>
         <ol>
-            <li><a href="#nutzer">Nutzer anlegen</a></li>
+            <li><a href="#nutzer">Personen anlegen</a></li>
             <li><a href="#kurse">Kurse und Lehrkräfte</a></li>
             <li><a href="#export">Daten exportieren</a></li>
             <li><a href="#automat-admin">Am Automaten verwalten</a></li>
@@ -275,7 +275,7 @@ Stunden: 12.5</pre>
             <p class="who">Für alle: so meldest du dich beim Kommen und Gehen.</p>
             <ol class="steps">
                 <li>Halte deine Karte an den Leser der Station. Ein kurzer Piep heißt: Karte gelesen.</li>
-                <li>Auf dem Display steht <span class="ui">Herzlich Willkommen</span> - du bist eingebucht.</li>
+                <li>Auf dem Display steht <span class="ui">Herzlich willkommen</span> - du bist eingebucht.</li>
                 <li>Wenn du gehst, hältst du die Karte noch einmal hin. Jetzt steht dort
                     <span class="ui">Auf Wiedersehen</span> und deine neuen Stunden.</li>
             </ol>
@@ -317,13 +317,13 @@ Stunden: 12.5</pre>
             <p class="who">Für Lehrkräfte und Admins.</p>
             <p>Melde dich auf der Startseite mit deiner E-Mail-Adresse und deinem Passwort an. Abmelden
                 kannst du dich oben rechts mit einem Klick auf deinen Namen. Das Passwort vergessen?
-                Ein Admin vergibt unter <span class="ui">Lehrkräfte</span> ein neues.</p>
+                Admins vergeben unter <span class="ui">Lehrkräfte</span> ein neues.</p>
             <p>Gibt es noch gar keinen Zugang, zeigt die Startseite stattdessen
                 <span class="ui">Ersten Admin-Zugang anlegen</span>. Wer sich dort als Erstes einträgt,
                 wird Admin.</p>
 
-            <h3>Die Schülerliste</h3>
-            <p><span class="ui">liste</span> in der Seitenleiste zeigt alle Schüler*innen deiner Kurse mit letzter
+            <h3>Die Liste</h3>
+            <p><span class="ui">Liste</span> in der Seitenleiste zeigt alle Schüler*innen deiner Kurse mit letzter
                 Anwesenheit, Zeitkonto und den letzten sieben Kursterminen als farbige Kästchen:</p>
             <ul class="legend">
                 <li><span class="sq present"></span>anwesend</li>
@@ -354,40 +354,43 @@ Stunden: 12.5</pre>
                     <span class="ui">Kein Eintrag</span>.</li>
                 <li><span class="ui">Speichern</span>.</li>
             </ol>
-            <p>Ein Tag lässt sich beliebig oft umstellen. Kommt jemand doch, der entschuldigt war, und
+            <p>Ein Tag lässt sich beliebig oft umstellen. Kommt doch eine Person, die entschuldigt war, und
                 bucht an der Station ein, wird der Tag von selbst grün.</p>
             <p>Im selben Fenster passt du unter <span class="ui">Zeitkonto</span> die Stunden an.</p>
         </section>
 
         <section id="nutzer">
-            <h2>Nutzer anlegen</h2>
+            <h2>Personen anlegen</h2>
             <p class="who">Für Admins.</p>
+            <p>Schüler*innen und Lehrkräfte werden auf der Website nur vorgemerkt. Angelegt sind sie erst,
+                wenn ihre Chipkarte am Automaten gescannt wurde - so hat jede Person eine Karte.</p>
 
-            <h3>Einzeln, mit Chipkarte</h3>
+            <h3>Einzeln</h3>
             <ol class="steps">
-                <li><span class="ui">Nutzer Hinzufügen</span> öffnen, Typ wählen und die Daten eintragen.</li>
-                <li><span class="ui">Chipkarte am Automaten zuweisen</span> angehakt lassen und auf
+                <li><span class="ui">Person hinzufügen</span> öffnen, Typ wählen, die Daten eintragen und auf
                     <span class="ui">Hinzufügen</span> klicken. Die Person ist jetzt vorgemerkt.</li>
                 <li>Am Automaten die Einstellungen öffnen (siehe <a href="#automat-admin">Am Automaten
-                    verwalten</a>) und <span class="ui">Nutzer Hinzufügen</span> tippen. Dort steht ihr Name.
+                    verwalten</a>) und <span class="ui">Person hinzufügen</span> tippen. Dort steht ihr Name
+                    (bei Lehrkräften steht <span class="ui">Nächste Lehrkraft</span> darüber).
                     Die neue Karte an den Leser halten.</li>
                 <li>Der Automat zeigt fünf Sekunden lang <span class="ui">Angelegt!</span>, dann die
                     nächste vorgemerkte Person.</li>
             </ol>
-            <p>Ohne Häkchen wird die Person nach einer Rückfrage sofort ohne Karte angelegt. Die Karte
-                lässt sich später nachtragen: beim Schüler <span class="ui">editieren</span> →
-                <span class="ui">Chipkarte</span> → <span class="ui">Karte scannen</span> und die Karte
+            <p>Die Warteschlange gilt nur, solange der Automat läuft - nach einem Neustart sind
+                vorgemerkte Personen nicht mehr da und müssen neu eingetragen werden. Eine Karte tauschen:
+                in der Liste bei der Person <span class="ui">editieren</span> →
+                <span class="ui">Chipkarte</span> → <span class="ui">Karte scannen</span> und die neue Karte
                 innerhalb von 20 Sekunden an den Leser am Automaten halten. Bei Lehrkräften geht das
                 genauso unter <span class="ui">Lehrkräfte</span>.</p>
 
-            <h3>Viele auf einmal: Schülerliste importieren</h3>
+            <h3>Viele auf einmal: Schüler*innen importieren</h3>
             <ol class="steps">
-                <li><span class="ui">Schüler importieren</span> öffnen und die Vorlage herunterladen.</li>
+                <li><span class="ui">Schüler*innen importieren</span> öffnen und die Vorlage herunterladen.</li>
                 <li>Die Vorlage in einer Tabellenkalkulation ausfüllen, als CSV speichern und wählen.</li>
                 <li>Die Vorschau prüft jede Zeile. Fehlerhafte Zeilen (etwa ein unbekannter Kurs oder eine
                     Person, die es schon gibt) werden übersprungen.</li>
-                <li>Mit Chipkarten werden alle vorgemerkt und am Automaten in der Reihenfolge der Datei
-                    angelegt, wie oben beschrieben.</li>
+                <li>Alle werden vorgemerkt und am Automaten in der Reihenfolge der Datei angelegt, wie
+                    oben beschrieben.</li>
             </ol>
             <p>Pflicht sind Vorname, Nachname und Geschlecht (<kbd>m</kbd>, <kbd>w</kbd> oder <kbd>d</kbd>
                 genügen). Mehrere Kurse trennst du mit <kbd>|</kbd>.</p>
@@ -396,7 +399,7 @@ Stunden: 12.5</pre>
         <section id="kurse">
             <h2>Kurse und Lehrkräfte</h2>
             <p class="who">Für Admins.</p>
-            <p><span class="ui">Kurs Hinzufügen</span> legt einen Kurs mit Name, Wochentag und Lehrkraft an.
+            <p><span class="ui">Kurs hinzufügen</span> legt einen Kurs mit Name, Wochentag und Lehrkraft an.
                 Unter <span class="ui">Kursübersicht</span> → <span class="ui">Alle Kurse</span> änderst du
                 mit <span class="ui">editieren</span> Tag, Lehrkräfte und Teilnehmende.</p>
             <p><span class="ui">Lehrkräfte</span> listet alle Zugänge. Dort vergibst du die Stufe
@@ -432,24 +435,28 @@ Stunden: 12.5</pre>
                 <tr><td><kbd>-</kbd></td><td>verringert den Vorrat.</td></tr>
                 <tr><td><kbd>Reaktivieren</kbd></td><td>gibt ein gesperrtes Fach wieder frei, der Vorrat bleibt.</td></tr>
             </table>
-            <p>Bleibt eine Süßigkeit hängen, sperrt der Automat das Fach von selbst
-                (<span class="ui">Deaktiviert</span>). Erst das Fach freiräumen, dann reaktivieren.
-                Ausgegraut - also für alle gesperrt - werden leere und gesperrte Fächer nur, wenn in den
-                Einstellungen <span class="ui">Verfügbarkeit überprüfen</span> eingeschaltet ist.</p>
-            <p><span class="ui">Alarm</span> schaltet den Summer am Kartenleser ein und aus.</p>
+            <p>Ist in den Einstellungen <span class="ui">Fächer automatisch sperren</span> eingeschaltet,
+                wird ein Fach ausgegraut, sobald sein Vorrat bei 0 ist, und gesperrt
+                (<span class="ui">Deaktiviert</span>), wenn eine Süßigkeit hängen bleibt - also wenn die
+                Ausgabe keinen Erfolg meldet. Erst das Fach freiräumen, dann reaktivieren.</p>
+            <p><span class="ui">Alarm</span> schaltet den Summer am Kartenleser ein und aus. Greift jemand
+                in den Automaten, geht der Alarm von selbst an. Aus geht er mit dem Admin-Code oder wenn
+                Lehrkräfte oder Admins ihre Karte am Automaten oder an der Station scannen.</p>
 
             <h3>Einstellungen</h3>
             <table>
-                <tr><td>Auto Logout Zeit</td><td>Nach wie vielen Sekunden der Automat abmeldet. Mit
+                <tr><td>Auto-Logout-Zeit</td><td>Nach wie vielen Sekunden der Automat abmeldet. Mit
                     <kbd>OK</kbd> übernehmen.</td></tr>
-                <tr><td>Verfügbarkeit überprüfen</td><td>Leere Fächer ausgrauen.</td></tr>
+                <tr><td>Verfügbarkeit überprüfen</td><td>Leere und gesperrte Fächer ausgrauen.</td></tr>
+                <tr><td>Fächer automatisch sperren</td><td>Fächer mit Vorrat 0 ausgrauen und Fächer sperren,
+                    aus denen nichts herausgefallen ist - unabhängig von <span class="ui">Verfügbarkeit überprüfen</span>.</td></tr>
                 <tr><td>Stundenanzahl überprüfen</td><td>Ausgeschaltet bekommt jede*r Süßigkeiten, egal
                     wie viele Stunden.</td></tr>
                 <tr><td>Bildschirmschoner</td><td>Nach 10 Minuten ohne Berührung; Tippen weckt den Automaten.</td></tr>
-                <tr><td>Nutzer Hinzufügen</td><td>Vorgemerkte Personen ihre Karte scannen lassen (siehe
-                    <a href="#nutzer">Nutzer anlegen</a>).</td></tr>
+                <tr><td>Person hinzufügen</td><td>Vorgemerkte Personen ihre Karte scannen lassen (siehe
+                    <a href="#nutzer">Personen anlegen</a>).</td></tr>
                 <tr><td>PING</td><td>Prüft, ob Kartenleser, Ausgabe und Station erreichbar sind.</td></tr>
-                <tr><td>Statistik Zurücksetzen</td><td>Löscht die gesamte Statistik.</td></tr>
+                <tr><td>Statistik zurücksetzen</td><td>Löscht die gesamte Statistik.</td></tr>
                 <tr><td>Stop</td><td>Beendet die Automaten-App. Wieder starten: im Menü des Geräts
                     <span class="ui">Automat</span> wählen oder das Gerät neu starten.</td></tr>
                 <tr><td>Herunterfahren</td><td>Schaltet das Gerät nach einer Minute aus; nochmal tippen bricht ab.</td></tr>
@@ -486,8 +493,8 @@ Stunden: 12.5</pre>
 
             <details>
                 <summary>Die Station zeigt „Karte unbekannt“</summary>
-                <div><p>Die Karte gehört noch niemandem. Ein Admin weist sie zu (siehe
-                    <a href="#nutzer">Nutzer anlegen</a>).</p></div>
+                <div><p>Die Karte gehört noch niemandem. Admins legen die Person an (siehe
+                    <a href="#nutzer">Personen anlegen</a>).</p></div>
             </details>
             <details>
                 <summary>Die Station zeigt „Keine Verbindung zum Automaten“</summary>
@@ -510,8 +517,8 @@ Stunden: 12.5</pre>
             </details>
             <details>
                 <summary>Ein Fach ist ausgegraut oder „Deaktiviert“</summary>
-                <div><p>Es ist leer, oder eine Süßigkeit ist hängen geblieben. Ein Admin füllt auf oder
-                    räumt das Fach frei und reaktiviert es (siehe
+                <div><p>Es ist leer, oder eine Süßigkeit ist hängen geblieben. Admins füllen auf oder
+                    räumen das Fach frei und reaktivieren es (siehe
                     <a href="#automat-admin">Am Automaten verwalten</a>).</p></div>
             </details>
             <details>
@@ -523,8 +530,8 @@ Stunden: 12.5</pre>
             <details>
                 <summary>Die Anmeldung auf der Website klappt nicht</summary>
                 <div>
-                    <p><span class="ui">E-Mail-Adresse oder Passwort falsch</span>: Eingaben prüfen oder einen
-                        Admin um ein neues Passwort bitten.</p>
+                    <p><span class="ui">E-Mail-Adresse oder Passwort falsch</span>: Eingaben prüfen oder die
+                        Admins um ein neues Passwort bitten.</p>
                     <p><span class="ui">Anmelden gerade nicht möglich</span>: Der Automat läuft nicht oder
                         wartet auf das Datenbank-Passwort.</p>
                 </div>

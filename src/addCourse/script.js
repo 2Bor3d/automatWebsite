@@ -56,5 +56,5 @@ function submitF() {
 }
 
 function noContent(feld) {
-    window.alert("Bitte füllen Sie das feld " + feld + " aus!");
+    window.alert("Bitte füllen Sie das Feld " + feld + " aus!");
 }

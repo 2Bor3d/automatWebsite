@@ -74,7 +74,7 @@ async function submit() {
     // Alle werden nur vorgemerkt - angelegt wird die Person erst, wenn ihre
     // Karte am Automaten unter „Nutzer hinzufügen“ gescannt wird.
     const queuedText = `${firstName} ${lastName} ist vorgemerkt. `
-        + "Jetzt am Automaten „Nutzer hinzufügen“ öffnen und die "
+        + "Jetzt am Automaten „Person hinzufügen“ öffnen und die "
         + "Chipkarte scannen – damit ist die Person angelegt.";
 
     message.innerText = "Verarbeitung…";

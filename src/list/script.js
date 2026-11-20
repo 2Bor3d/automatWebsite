@@ -214,7 +214,7 @@ function todayIso() {
 }
 
 async function deleteUser(id) {
-	if (confirm("Wollen Sie diesen Account wirklich löschen?\nAlle Daten werden restlos gelöscht")) {
+	if (confirm("Wollen Sie diesen Account wirklich löschen?\nAlle Daten werden restlos gelöscht.")) {
 		await fetch("/delete_user", {
 			method: "POST",
 			body: JSON.stringify({ "id": id }),
@@ -343,7 +343,7 @@ async function changeType(studentId) {
     if (!email.includes("@")) { msg.textContent = "Bitte eine E-Mail-Adresse eingeben."; return; }
     if (password.length < 8) { msg.textContent = "Das Passwort braucht mindestens 8 Zeichen."; return; }
     const label = type === "ADMIN" ? "Admin" : "Lehrkraft";
-    if (!confirm(`Diese Person wird zur ${label} und meldet sich künftig mit ${email} an.\nAus ihren Kursen wird sie ausgetragen.`)) return;
+    if (!confirm(`Diese Person wird ${label} und meldet sich künftig mit ${email} an.\nAus ihren Kursen wird sie ausgetragen.`)) return;
 
     msg.textContent = "";
     const text = await fetch("/change_user_type", {
