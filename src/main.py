@@ -16,7 +16,6 @@ import time
 app = flask.Flask(__name__);
 
 logedin = {};
-scanner = {"active": False, "id": []};
 
 # Wartezeit auf einen Kartenscan beim Anlegen: 100 * 0.1s = 10 Sekunden.
 SCAN_TIMEOUT_STEPS = 100;
@@ -602,7 +601,6 @@ def courses():
 
 @app.route("/add_student", methods=["POST"])
 def add_student():
-    global scanner;
     if not checkAuth(flask.request.cookies.get("auth")):
         return "fail"
     if not logedin[flask.request.cookies.get("auth")]["admin"]:
@@ -691,7 +689,6 @@ def import_students():
 
 @app.route("/add_teacher", methods=["POST"])
 def add_teacher():
-    global scanner;
     if not checkAuth(flask.request.cookies.get("auth")):
         return "fail"
     if not logedin[flask.request.cookies.get("auth")]["admin"]:
@@ -791,27 +788,26 @@ def delete_teacher():
     return "fail"
 
 
+# "Karte scannen": Der Scanner schickt Karten signiert ans Backend; das hält die
+# nächste Karte für die Website zurück, solange hier gewartet wird.
 @app.route("/start_scan", methods=["POST"])
 def start_scan():
-    global scanner
     if not checkAuth(flask.request.cookies.get("auth")):
         return flask.make_response("authorisation failed"), 401
-    # Bewusst komplett neu setzen: ein liegengebliebener Scan von vorher würde
-    # sonst sofort als "gescannt" durchgehen.
-    scanner = {"active": True, "id": []}
+    r = _call("post", IP + "/scanned/capture/start")
+    if r is None:
+        return flask.make_response("backend unavailable", 503)
     return "started"
 
 
 @app.route("/check_scan", methods=["POST"])
 def check_scan():
-    global scanner
     if not checkAuth(flask.request.cookies.get("auth")):
         return flask.make_response("authorisation failed"), 401
-    if scanner["active"] and scanner["id"] != []:
-        rfid = scanner["id"]
-        scanner = {"active": False, "id": []}
-        return {"status": "done", "rfid": rfid}
-    return {"status": "waiting"}
+    r = _call("post", IP + "/scanned/capture/check")
+    if r is None:
+        return {"status": "waiting"}
+    return json.loads(r.text)
 
 
 @app.route("/change_user", methods=["POST"])
@@ -1094,24 +1090,6 @@ def csv():
 
     return send_file(io.BytesIO(buffer.getvalue().encode("utf-8")), as_attachment=True,
                      download_name="students.csv", mimetype="text/csv")
-
-
-@app.route("/scan", methods=["POST"])
-def scan():
-    data = flask.request.get_data()
-    if scanner["active"]:
-        scanner["id"] = json.loads(data);
-    else:
-        _call("post", IP + "/scanned", json_body={"rfid": json.loads(data)})
-    return "idk bro"
-
-
-@app.route("/station_scan", methods=["POST"])
-def station_scan():
-    data = flask.request.get_data()
-    r = _call("post", IP + "/login", json_body={"rfid": json.loads(data)})
-    if r is None: return "login failed"
-    return r.text
 
 
 if __name__ == "__main__":
