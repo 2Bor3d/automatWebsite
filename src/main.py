@@ -378,6 +378,25 @@ def username():
         return flask.make_response("authorisation failed"), 401
 
 
+@app.route("/version", methods=["POST"])
+def version():
+    """Version des Automaten und ob es eine neuere gibt (der Automat fragt
+    GitHub, höchstens alle 30 Minuten). Aktualisiert wird am Automaten selbst
+    ("Automat aktualisieren" auf dem Desktop)."""
+    if not checkAuth(flask.request.cookies.get("auth")):
+        return flask.make_response("authorisation failed"), 401
+    r = _call("get", IP + "/system/version")
+    if r is None:
+        # Ältere Automaten kennen /system/version noch nicht.
+        return flask.make_response("backend unavailable", 503)
+    data = json.loads(r.text)
+    return {
+        "installed": data.get("installed"),
+        "latest": data.get("latest"),
+        "updateAvailable": bool(data.get("updateAvailable")),
+    }
+
+
 def is_page(position) -> bool:
     """Nur echte Seiten (ein Ordner mit index.html) - die Position landet in
     einem Dateipfad (page.html), ein "../" darf da nicht hinein."""

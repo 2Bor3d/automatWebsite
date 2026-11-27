@@ -46,6 +46,8 @@ function load() {
 		if (activeEl) activeEl.classList.add("nav-active");
 
 		renderViewAs(json);
+		// Auch in "Ansicht als" bleibt die Person Admin (realAdmin).
+		loadVersion(json["admin"] == true || json["realAdmin"] == true);
 	}).catch((err) => {
 		console.error("Laden der Navigation fehlgeschlagen:", err);
 		document.getElementById("username").innerText = "Fehler";
@@ -56,6 +58,25 @@ function toggleBar() {
 	const bar = document.getElementById("bar");
 	const collapsed = bar.classList.toggle("bar-collapsed");
 	localStorage.setItem("barCollapsed", collapsed ? "1" : "0");
+}
+
+// Version des Automaten in Titel und Fußzeile; Admins sehen außerdem, wenn
+// es eine neuere gibt (aktualisiert wird am Automaten selbst).
+function loadVersion(isAdmin) {
+	fetch("/version", { method: "POST" }).then((r) => {
+		if (!r.ok) throw new Error("HTTP " + r.status);
+		return r.json();
+	}).then((v) => {
+		if (!v.installed) return;
+		document.title = "B.A.M.B.I. " + v.installed;
+		document.getElementById("version").innerText = "Automat " + v.installed;
+		if (!isAdmin || !v.updateAvailable || !v.latest) return;
+		const banner = document.getElementById("update-banner");
+		banner.innerText = "Update verfügbar: " + v.installed + " → " + v.latest;
+		banner.title = "Am Automaten auf dem Desktop »Automat aktualisieren« öffnen. "
+			+ "Danach am Automaten das Datenbank-Passwort eingeben.";
+		banner.classList.remove("hidden");
+	}).catch((err) => console.info("Version des Automaten nicht verfügbar:", err));
 }
 
 // Erlaubt Admins, die Seite testweise so zu sehen, wie eine bestimmte

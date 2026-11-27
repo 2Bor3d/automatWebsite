@@ -2,7 +2,7 @@
 <html lang="de">
 	<head>
 		<meta charset="UTF-8">
-		<title>B.A.M.B.I. v.0.1</title>
+		<title>B.A.M.B.I.</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<script src="script.js"></script>
 		<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
@@ -14,6 +14,7 @@
 			<header id="header">
 				<div class="header-logo"><img src="static/LogoBambiWebsite.png" alt="logo"/></div>
 				<div class="header-text">MINT-Zentrum Seeheim</div>
+				<div id="update-banner" class="hidden"></div>
 				<div id="viewas-container"></div>
 				<div id="user">
 					<p onclick="logout()" id="username"
@@ -53,6 +54,7 @@
 			</div>
 		</main>
 		<footer>
+			<p id="version"></p>
 			<p>&copy; Annika Reinhardt, David Glänzel & Ben Schnorrenberger</p>
 		</footer>
       </body>

@@ -146,6 +146,18 @@ iframe {
 	background-color: #eef6e3;
 }
 
+#update-banner {
+	margin-left: 16px;
+	font-size: 14px;
+	font-weight: 600;
+	padding: 5px 10px;
+	border-radius: 5px;
+	background-color: #ffd24d;
+	color: #3d3200;
+	white-space: nowrap;
+	cursor: help;
+}
+
 #user {
 	/* position: relative;
 	top: 50%;
